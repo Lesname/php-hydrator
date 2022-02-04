@@ -3,10 +3,7 @@ declare(strict_types=1);
 
 namespace LessHydratorTest;
 
-use LessHydrator\Exception\ConstructorRequired;
 use LessHydrator\Exception\MissingValue;
-use LessHydrator\Exception\NonValueObject;
-use LessHydrator\Exception\RequireNamedType;
 use LessHydrator\ReflectionHydrator;
 use LessValueObject\Collection\AbstractCollectionValueObject;
 use LessValueObject\Collection\CollectionValueObject;
@@ -15,11 +12,11 @@ use LessValueObject\Number\AbstractNumberValueObject;
 use LessValueObject\Number\Int\AbstractIntValueObject;
 use LessValueObject\Number\Int\Paginate\Page;
 use LessValueObject\Number\Int\Paginate\PerPage;
-use LessValueObject\Number\Int\PositiveInt;
-use LessValueObject\String\Format\EmailAddress;
 use LessValueObject\String\Format\SearchTerm;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use stdClass;
+use Throwable;
 
 /**
  * @covers \LessHydrator\ReflectionHydrator
@@ -82,12 +79,12 @@ final class ReflectionHydratorTest extends TestCase
     public function testCollection(): void
     {
         $class = new class ([]) extends AbstractCollectionValueObject {
-            public static function getMinSize(): int
+            public static function getMinlength(): int
             {
                 return 0;
             }
 
-            public static function getMaxSize(): int
+            public static function getMaxLength(): int
             {
                 return 3;
             }
@@ -103,8 +100,13 @@ final class ReflectionHydratorTest extends TestCase
 
         self::assertInstanceOf(CollectionValueObject::class, $collection);
 
-        self::assertEquals(EnumValueObjectStub::from('fiz'), $collection->first());
-        self::assertEquals(EnumValueObjectStub::from('biz'), $collection->last());
+        foreach ($collection as $i => $value) {
+            match ($i) {
+                0 => self::assertEquals(EnumValueObjectStub::Fiz, $value),
+                1 => self::assertEquals(EnumValueObjectStub::Biz, $value),
+                default => throw new RuntimeException(),
+            };
+        }
     }
 
     public function testComposite(): void
@@ -145,7 +147,7 @@ final class ReflectionHydratorTest extends TestCase
 
     public function testNonValueObject(): void
     {
-        $this->expectException(NonValueObject::class);
+        $this->expectException(Throwable::class);
 
         $hydrator = new ReflectionHydrator();
         $hydrator->hydrate(stdClass::class, []);
@@ -153,7 +155,7 @@ final class ReflectionHydratorTest extends TestCase
 
     public function testCompositeEmpyConstructor(): void
     {
-        $this->expectException(ConstructorRequired::class);
+        $this->expectException(Throwable::class);
 
         $paginate = new class () extends AbstractCompositeValueObject {
             public function __construct()
@@ -175,18 +177,5 @@ final class ReflectionHydratorTest extends TestCase
 
         $hydrator = new ReflectionHydrator();
         $hydrator->hydrate($paginate::class, []);
-    }
-
-    public function testNonNamedType(): void
-    {
-        $this->expectException(RequireNamedType::class);
-
-        $paginate = new class (1) extends AbstractCompositeValueObject {
-            public function __construct(public int|float $foo)
-            {}
-        };
-
-        $hydrator = new ReflectionHydrator();
-        $hydrator->hydrate($paginate::class, ['foo' => 1]);
     }
 }

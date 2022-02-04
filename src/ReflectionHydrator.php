@@ -3,12 +3,9 @@ declare(strict_types=1);
 
 namespace LessHydrator;
 
-use LessHydrator\Exception\ConstructorRequired;
+use BackedEnum;
 use LessHydrator\Exception\MissingValue;
-use LessHydrator\Exception\NonValueObject;
-use LessHydrator\Exception\RequireNamedType;
 use LessValueObject\Collection\CollectionValueObject;
-use LessValueObject\Enum\EnumValueObject;
 use LessValueObject\Number\Int\IntValueObject;
 use LessValueObject\Number\NumberValueObject;
 use LessValueObject\ValueObject;
@@ -24,19 +21,11 @@ final class ReflectionHydrator implements Hydrator
      * @param class-string<ValueObject> $className
      * @param array<mixed>|int|float|string $data
      *
-     * @return ValueObject
      * @throws ReflectionException
-     * @throws RequireNamedType
-     * @throws ConstructorRequired
      * @throws MissingValue
-     * @throws NonValueObject
      */
     public function hydrate(string $className, array|int|float|string $data): ValueObject
     {
-        if (!is_subclass_of($className, ValueObject::class)) {
-            throw new NonValueObject($className);
-        }
-
         if (is_array($data)) {
             return $this->hydrateFromArray($className, $data);
         }
@@ -49,10 +38,7 @@ final class ReflectionHydrator implements Hydrator
      * @param array<mixed> $data
      *
      * @throws ReflectionException
-     * @throws RequireNamedType
-     * @throws ConstructorRequired
      * @throws MissingValue
-     * @throws NonValueObject
      */
     private function hydrateFromArray(string $className, array $data): ValueObject
     {
@@ -77,9 +63,7 @@ final class ReflectionHydrator implements Hydrator
         $reflection = new ReflectionClass($className);
         $constructor = $reflection->getConstructor();
 
-        if (!$constructor instanceof ReflectionMethod || count($constructor->getParameters()) === 0) {
-            throw new ConstructorRequired($className);
-        }
+        assert($constructor instanceof ReflectionMethod && count($constructor->getParameters()) > 0);
 
         return new $className(
             ...array_map(
@@ -93,10 +77,7 @@ final class ReflectionHydrator implements Hydrator
                     }
 
                     $type = $item->getType();
-
-                    if (!$type instanceof ReflectionNamedType) {
-                        throw new RequireNamedType();
-                    }
+                    assert($type instanceof ReflectionNamedType);
 
                     $value = $data[$item->getName()];
 
@@ -137,8 +118,11 @@ final class ReflectionHydrator implements Hydrator
             return new $className((float)$data);
         }
 
-        if (is_subclass_of($className, EnumValueObject::class) && is_string($data)) {
-            return $className::from($data);
+        if (is_subclass_of($className, BackedEnum::class) && is_string($data)) {
+            $scalar = $className::from($data);
+            assert($scalar instanceof ValueObject);
+
+            return $scalar;
         }
 
         return new $className($data);
