@@ -8,7 +8,7 @@ namespace LessHydrator\Exception;
  */
 final class MissingValue extends AbstractException
 {
-    public function __construct(public string $name)
+    public function __construct(public readonly string $name)
     {
         parent::__construct("Missing '{$name}'");
     }

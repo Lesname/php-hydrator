@@ -1,17 +1,21 @@
 <?php
+// phpcs:ignoreFile
 declare(strict_types=1);
 
 namespace LessHydratorTest;
 
-use LessValueObject\Enum\AbstractEnumValueObject;
+use LessValueObject\Enum\EnumValueObject;
 
-final class EnumValueObjectStub extends AbstractEnumValueObject
+/**
+ * @psalm-immutable
+ */
+enum EnumValueObjectStub: string implements EnumValueObject
 {
-    public static function cases(): array
+    case Fiz = 'fiz';
+    case Biz = 'biz';
+
+    public function jsonSerialize(): mixed
     {
-        return [
-            'fiz',
-            'biz',
-        ];
+        return $this->value;
     }
 }
