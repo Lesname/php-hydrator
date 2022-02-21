@@ -181,6 +181,7 @@ final class ReflectionHydrator implements Hydrator
      * @param string $data
      *
      * @psalm-suppress InvalidReturnStatement
+     * @psalm-suppress InvalidReturnType
      */
     private function hydrateEnum(string $className, string $data): ValueObject
     {
