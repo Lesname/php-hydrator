@@ -6,6 +6,7 @@ namespace LessHydrator;
 use BackedEnum;
 use LessHydrator\Exception\MissingValue;
 use LessValueObject\Collection\CollectionValueObject;
+use LessValueObject\Enum\EnumValueObject;
 use LessValueObject\Number\Int\IntValueObject;
 use LessValueObject\Number\NumberValueObject;
 use LessValueObject\ValueObject;
@@ -14,52 +15,96 @@ use ReflectionException;
 use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionParameter;
+use function PHPStan\dumpType;
 
 final class ReflectionHydrator implements Hydrator
 {
     /**
-     * @param class-string<ValueObject> $className
+     * @param class-string<T> $className
      * @param array<mixed>|int|float|string $data
+     *
+     * @template T of \LessValueObject\ValueObject
+     *
+     * @return T
      *
      * @throws ReflectionException
      * @throws MissingValue
      */
     public function hydrate(string $className, array|int|float|string $data): ValueObject
     {
-        if (is_array($data)) {
-            return $this->hydrateFromArray($className, $data);
-        }
+        $hydrated = is_array($data)
+            ? $this->hydrateFromArray($className, $data)
+            : $this->hydrateFromScalar($className, $data);
 
-        return $this->hydrateFromScalar($className, $data);
+        assert($hydrated instanceof $className);
+
+        return $hydrated;
     }
 
     /**
      * @param class-string<ValueObject> $className
      * @param array<mixed> $data
      *
-     * @throws ReflectionException
+     * @return ValueObject
+     *
      * @throws MissingValue
+     *
+     * @throws ReflectionException
      */
     private function hydrateFromArray(string $className, array $data): ValueObject
     {
         if (is_subclass_of($className, CollectionValueObject::class)) {
-            $itemType = $className::getItemType();
+            /** @var class-string<CollectionValueObject<ValueObject>> $className */
+            $collection = $this->hydrateCollection($className, $data);
+            assert($collection instanceof $className);
 
-            return new $className(
-                array_map(
-                    function ($item) use ($itemType) {
-                        assert(
-                            is_array($item) || is_int($item) || is_float($item) || is_string($item),
-                            'Invalid data',
-                        );
-
-                        return $this->hydrate($itemType, $item);
-                    },
-                    $data,
-                ),
-            );
+            return $collection;
         }
 
+        return $this->hydrateComposite($className, $data);
+    }
+
+    /**
+     * @param class-string<CollectionValueObject<ValueObject>> $className
+     * @param array<mixed> $data
+     *
+     * @return ValueObject
+     *
+     * @throws MissingValue
+     * @throws ReflectionException
+     */
+    private function hydrateCollection(string $className, array $data): ValueObject
+    {
+        $itemType = $className::getItemType();
+
+        return new $className(
+            array_map(
+                function ($item) use ($itemType) {
+                    assert(
+                        is_array($item) || is_int($item) || is_float($item) || is_string($item),
+                        'Invalid data',
+                    );
+
+                    return $this->hydrate($itemType, $item);
+                },
+                $data,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string<T> $className
+     * @param array<mixed> $data
+     *
+     * @return T
+     * @throws MissingValue
+     *
+     * @template T of \LessValueObject\ValueObject
+     *
+     * @throws ReflectionException
+     */
+    private function hydrateComposite(string $className, array $data): ValueObject
+    {
         $reflection = new ReflectionClass($className);
         $constructor = $reflection->getConstructor();
 
@@ -107,24 +152,38 @@ final class ReflectionHydrator implements Hydrator
     /**
      * @param class-string<ValueObject> $className
      * @param int|float|string $data
+     *
+     * @return ValueObject
      */
     private function hydrateFromScalar(string $className, int|float|string $data): ValueObject
     {
         if (is_subclass_of($className, NumberValueObject::class)) {
-            if (is_subclass_of($className, IntValueObject::class)) {
-                return new $className((int)$data);
-            }
-
-            return new $className((float)$data);
+            $data = is_subclass_of($className, IntValueObject::class)
+                ? (int)$data
+                : (float)$data;
         }
 
-        if (is_subclass_of($className, BackedEnum::class) && is_string($data)) {
-            $scalar = $className::from($data);
-            assert($scalar instanceof ValueObject);
+        if (
+            is_subclass_of($className, EnumValueObject::class)
+            && is_subclass_of($className, BackedEnum::class)
+        ) {
+            /** @var class-string<EnumValueObject&BackedEnum> $className */
+            assert(is_string($data));
 
-            return $scalar;
+            return $this->hydrateEnum($className, $data);
         }
 
         return new $className($data);
+    }
+
+    /**
+     * @param class-string<EnumValueObject&BackedEnum> $className
+     * @param string $data
+     *
+     * @psalm-suppress InvalidReturnStatement
+     */
+    private function hydrateEnum(string $className, string $data): ValueObject
+    {
+        return $className::from($data);
     }
 }
