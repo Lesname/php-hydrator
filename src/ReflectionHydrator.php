@@ -15,7 +15,6 @@ use ReflectionException;
 use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionParameter;
-use function PHPStan\dumpType;
 
 final class ReflectionHydrator implements Hydrator
 {
