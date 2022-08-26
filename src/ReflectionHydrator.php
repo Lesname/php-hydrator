@@ -103,6 +103,8 @@ final class ReflectionHydrator implements Hydrator
      * @template T of \LessValueObject\ValueObject
      *
      * @throws ReflectionException
+     *
+     * @psalm-suppress MixedAssignment
      */
     private function hydrateComposite(string $className, array $data): ValueObject
     {
@@ -118,20 +120,18 @@ final class ReflectionHydrator implements Hydrator
                         foreach ($item->getAttributes(DefaultValue::class) as $attribute) {
                             $attribute = $attribute->newInstance();
 
-                            return $attribute->default;
-                        }
+                            $data[$item->getName()] = $attribute->default;
 
+                            break;
+                        }
+                    }
+
+                    if (!isset($data[$item->getName()])) {
                         if ($item->allowsNull()) {
                             return null;
                         }
 
                         throw new MissingValue($item->getName());
-                    } elseif ($data[$item->getName()] === null) {
-                        if ($item->allowsNull()) {
-                            return null;
-                        }
-
-                        throw new RuntimeException('Null not allowed');
                     }
 
                     $type = $item->getType();
