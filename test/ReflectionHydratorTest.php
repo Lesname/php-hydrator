@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace LessHydratorTest;
 
+use LessHydrator\Attribute\DefaultValue;
 use LessHydrator\Exception\MissingValue;
 use LessHydrator\ReflectionHydrator;
 use LessValueObject\Collection\AbstractCollectionValueObject;
@@ -12,6 +13,7 @@ use LessValueObject\Number\AbstractNumberValueObject;
 use LessValueObject\Number\Int\AbstractIntValueObject;
 use LessValueObject\Number\Int\Paginate\Page;
 use LessValueObject\Number\Int\Paginate\PerPage;
+use LessValueObject\Number\Int\Positive;
 use LessValueObject\String\Format\SearchTerm;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -118,9 +120,10 @@ final class ReflectionHydratorTest extends TestCase
         $paginate = new class ($term, null, $perPage, $page, true) extends AbstractCompositeValueObject {
             public function __construct(
                 public SearchTerm $term,
-                public ?PositiveInt $int,
+                public ?Positive $int,
                 public PerPage $perPage,
                 public Page $page,
+                #[DefaultValue(false)]
                 public bool $biz,
             ) {}
         };
@@ -132,7 +135,6 @@ final class ReflectionHydratorTest extends TestCase
                 'term' => 'foo',
                 'perPage' => $perPage,
                 'page' => 3,
-                'biz' => false,
             ],
         );
 
