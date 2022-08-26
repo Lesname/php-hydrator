@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace LessHydrator;
 
 use BackedEnum;
+use LessDocumentor\Helper\AttributeHelper;
+use LessDocumentor\Type\Attribute\DocDefault;
 use LessHydrator\Exception\MissingValue;
 use LessValueObject\Collection\CollectionValueObject;
 use LessValueObject\Enum\EnumValueObject;
@@ -15,6 +17,7 @@ use ReflectionException;
 use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionParameter;
+use RuntimeException;
 
 final class ReflectionHydrator implements Hydrator
 {
@@ -112,12 +115,24 @@ final class ReflectionHydrator implements Hydrator
         return new $className(
             ...array_map(
                 function (ReflectionParameter $item) use ($data): mixed {
-                    if (!isset($data[$item->getName()])) {
+                    if (!array_key_exists($item->getName(), $data)) {
+                        foreach ($item->getAttributes(DocDefault::class) as $attribute) {
+                            $attribute = $attribute->newInstance();
+
+                            return $attribute->default;
+                        }
+
                         if ($item->allowsNull()) {
                             return null;
                         }
 
                         throw new MissingValue($item->getName());
+                    } elseif ($data[$item->getName()] === null) {
+                        if ($item->allowsNull()) {
+                            return null;
+                        }
+
+                        throw new RuntimeException('Null not allowed');
                     }
 
                     $type = $item->getType();
