@@ -103,6 +103,8 @@ final class ReflectionHydrator implements Hydrator
      * @template T of \LessValueObject\ValueObject
      *
      * @throws ReflectionException
+     *
+     * @psalm-suppress MixedAssignment
      */
     private function hydrateComposite(string $className, array $data): ValueObject
     {
