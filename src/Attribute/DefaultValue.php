@@ -11,6 +11,9 @@ use Attribute;
 #[Attribute(Attribute::TARGET_PARAMETER)]
 final class DefaultValue
 {
-    public function __construct(public readonly mixed $default)
+    /**
+     * @param string|int|bool|null|array<mixed>|float $default
+     */
+    public function __construct(public readonly string|int|bool|null|array|float $default)
     {}
 }
