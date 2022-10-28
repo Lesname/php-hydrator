@@ -126,6 +126,10 @@ final class ReflectionHydrator implements Hydrator
                         }
                     }
 
+                    if ($item->isDefaultValueAvailable()) {
+                        $data[$item->getName()] = $item->getDefaultValue();
+                    }
+
                     if (!isset($data[$item->getName()])) {
                         if ($item->allowsNull()) {
                             return null;
