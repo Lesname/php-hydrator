@@ -191,8 +191,6 @@ final class ReflectionHydratorTest extends TestCase
         $hydrator = new ReflectionHydrator();
         $result = $hydrator->hydrate($class::class, []);
 
-        var_dump($result->foo);
-
         self::assertInstanceOf($class::class, $result);
         self::assertFalse($result->foo);
     }
