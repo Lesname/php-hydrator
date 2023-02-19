@@ -7,6 +7,8 @@ use Attribute;
 
 /**
  * @psalm-immutable
+ *
+ * @deprecated will be dropped
  */
 #[Attribute(Attribute::TARGET_PARAMETER)]
 final class DefaultValue

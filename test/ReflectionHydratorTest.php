@@ -180,4 +180,18 @@ final class ReflectionHydratorTest extends TestCase
         $hydrator = new ReflectionHydrator();
         $hydrator->hydrate($paginate::class, []);
     }
+
+    public function testCompositeDefaultValue(): void
+    {
+        $class = new class (true) extends AbstractCompositeValueObject {
+            public function __construct(public readonly ?bool $foo = false)
+            {}
+        };
+
+        $hydrator = new ReflectionHydrator();
+        $result = $hydrator->hydrate($class::class, []);
+
+        self::assertInstanceOf($class::class, $result);
+        self::assertFalse($result->foo);
+    }
 }
