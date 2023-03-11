@@ -16,7 +16,7 @@ use ReflectionException;
 use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionParameter;
-use RuntimeException;
+use LessValueObject\Composite\DynamicCompositeValueObject;
 
 final class ReflectionHydrator implements Hydrator
 {
@@ -108,13 +108,15 @@ final class ReflectionHydrator implements Hydrator
      */
     private function hydrateComposite(string $className, array $data): ValueObject
     {
-        $reflection = new ReflectionClass($className);
-        $constructor = $reflection->getConstructor();
+        if ($className === DynamicCompositeValueObject::class) {
+            $parameters = [$data];
+        } else {
+            $reflection = new ReflectionClass($className);
+            $constructor = $reflection->getConstructor();
 
-        assert($constructor instanceof ReflectionMethod && count($constructor->getParameters()) > 0);
+            assert($constructor instanceof ReflectionMethod && count($constructor->getParameters()) > 0);
 
-        return new $className(
-            ...array_map(
+            $parameters = array_map(
                 function (ReflectionParameter $item) use ($data): mixed {
                     if (!array_key_exists($item->getName(), $data)) {
                         foreach ($item->getAttributes(DefaultValue::class) as $attribute) {
@@ -162,8 +164,10 @@ final class ReflectionHydrator implements Hydrator
                     return $this->hydrate($typeName, $value);
                 },
                 $constructor->getParameters(),
-            ),
-        );
+            );
+        }
+
+        return new $className(...$parameters);
     }
 
     /**
