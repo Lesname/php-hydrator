@@ -194,4 +194,18 @@ final class ReflectionHydratorTest extends TestCase
         self::assertInstanceOf($class::class, $result);
         self::assertFalse($result->foo);
     }
+
+    public function testBoolCast(): void
+    {
+        $class = new class (true) extends AbstractCompositeValueObject {
+            public function __construct(public readonly bool $fiz)
+            {}
+        };
+
+        $hydrator = new ReflectionHydrator();
+        $result = $hydrator->hydrate($class::class, ['fiz' => 1]);
+
+        self::assertInstanceOf($class::class, $result);
+        self::assertTrue($result->fiz);
+    }
 }
