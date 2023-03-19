@@ -126,10 +126,10 @@ final class ReflectionHydrator implements Hydrator
 
                             break;
                         }
-                    }
 
-                    if ($item->isDefaultValueAvailable()) {
-                        $data[$item->getName()] = $item->getDefaultValue();
+                        if ($item->isDefaultValueAvailable()) {
+                            $data[$item->getName()] = $item->getDefaultValue();
+                        }
                     }
 
                     if (!isset($data[$item->getName()])) {
@@ -146,7 +146,7 @@ final class ReflectionHydrator implements Hydrator
                     $value = $data[$item->getName()];
 
                     if ($type->isBuiltin()) {
-                        return $value;
+                        return $this->cast($value, $type->getName());
                     }
 
                     $typeName = $type->getName();
@@ -207,5 +207,42 @@ final class ReflectionHydrator implements Hydrator
     private function hydrateEnum(string $className, string $data): ValueObject
     {
         return $className::from($data);
+    }
+
+    protected function cast(mixed $value, string $to): mixed
+    {
+        if (get_debug_type($value) === $to) {
+            return $value;
+        }
+
+        if ($to === 'string') {
+            if (is_int($value) || is_float($value)) {
+                return (string)$value;
+            }
+        } elseif ($to === 'bool') {
+            if (in_array($value, [0, 1], true)) {
+                return (bool)$value;
+            }
+
+            if (is_string($value)) {
+                if (in_array($value, ['true', 'false'], true)) {
+                    return $value === 'true';
+                }
+
+                if (in_array($value, ['0', '1'], true)) {
+                    return $value === '1';
+                }
+            }
+        } elseif ($to === 'float') {
+            if (is_string($value) && preg_match('/^-?(\d+|\d*\.\d+)$/', $value)) {
+                $value = (float)$value;
+            }
+        } elseif ($to === 'int') {
+            if (is_string($value) && preg_match('/^-?\d+$/', $value)) {
+                $value = (int)$value;
+            }
+        }
+
+        return $value;
     }
 }
