@@ -28,17 +28,17 @@ final class ReflectionHydratorTest extends TestCase
     public function testNumberVo(): void
     {
         $class = new class (2) extends AbstractNumberValueObject {
-            public static function getPrecision(): int
+            public static function getMultipleOf(): float|int
             {
-                return 2;
+                return .01;
             }
 
-            public static function getMinValue(): float|int
+            public static function getMinimumValue(): float|int
             {
                 return 1;
             }
 
-            public static function getMaxValue(): float|int
+            public static function getMaximumValue(): float|int
             {
                 return 4;
             }
@@ -53,12 +53,12 @@ final class ReflectionHydratorTest extends TestCase
     public function testIntVo(): void
     {
         $class = new class (2) extends AbstractIntValueObject {
-            public static function getMinValue(): int
+            public static function getMinimumValue(): int
             {
                 return 1;
             }
 
-            public static function getMaxValue(): int
+            public static function getMaximumValue(): int
             {
                 return 4;
             }
@@ -81,12 +81,12 @@ final class ReflectionHydratorTest extends TestCase
     public function testCollection(): void
     {
         $class = new class ([]) extends AbstractCollectionValueObject {
-            public static function getMinlength(): int
+            public static function getMinimumSize(): int
             {
                 return 0;
             }
 
-            public static function getMaxLength(): int
+            public static function getMaximumSize(): int
             {
                 return 3;
             }
@@ -123,8 +123,7 @@ final class ReflectionHydratorTest extends TestCase
                 public ?Positive $int,
                 public PerPage $perPage,
                 public Page $page,
-                #[DefaultValue(false)]
-                public bool $biz,
+                public bool $biz = false,
             ) {}
         };
 

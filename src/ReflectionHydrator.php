@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace LessHydrator;
 
 use BackedEnum;
-use LessHydrator\Attribute\DefaultValue;
 use LessHydrator\Exception\MissingValue;
 use LessValueObject\Collection\CollectionValueObject;
 use LessValueObject\Enum\EnumValueObject;
@@ -119,14 +118,6 @@ final class ReflectionHydrator implements Hydrator
             $parameters = array_map(
                 function (ReflectionParameter $item) use ($data): mixed {
                     if (!array_key_exists($item->getName(), $data)) {
-                        foreach ($item->getAttributes(DefaultValue::class) as $attribute) {
-                            $attribute = $attribute->newInstance();
-
-                            $data[$item->getName()] = $attribute->default;
-
-                            break;
-                        }
-
                         if ($item->isDefaultValueAvailable()) {
                             $data[$item->getName()] = $item->getDefaultValue();
                         }
