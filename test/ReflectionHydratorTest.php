@@ -3,22 +3,23 @@ declare(strict_types=1);
 
 namespace LessHydratorTest;
 
-use LessHydrator\Attribute\DefaultValue;
-use LessHydrator\Exception\MissingValue;
-use LessHydrator\ReflectionHydrator;
-use LessValueObject\Collection\AbstractCollectionValueObject;
-use LessValueObject\Collection\CollectionValueObject;
-use LessValueObject\Composite\AbstractCompositeValueObject;
-use LessValueObject\Number\AbstractNumberValueObject;
-use LessValueObject\Number\Int\AbstractIntValueObject;
-use LessValueObject\Number\Int\Paginate\Page;
-use LessValueObject\Number\Int\Paginate\PerPage;
-use LessValueObject\Number\Int\Positive;
-use LessValueObject\String\Format\SearchTerm;
-use PHPUnit\Framework\TestCase;
-use RuntimeException;
 use stdClass;
 use Throwable;
+use RuntimeException;
+use PHPUnit\Framework\TestCase;
+use LessHydrator\ReflectionHydrator;
+use LessHydrator\Attribute\DefaultValue;
+use LessHydrator\Exception\MissingValue;
+use LessValueObject\Number\Int\Positive;
+use LessValueObject\Number\Int\Paginate\Page;
+use LessValueObject\String\Format\SearchTerm;
+use LessHydratorTest\Stub\EnumValueObjectStub;
+use LessValueObject\Number\Int\Paginate\PerPage;
+use LessValueObject\Collection\CollectionValueObject;
+use LessValueObject\Number\AbstractNumberValueObject;
+use LessValueObject\Number\Int\AbstractIntValueObject;
+use LessValueObject\Composite\AbstractCompositeValueObject;
+use LessValueObject\Collection\AbstractCollectionValueObject;
 
 /**
  * @covers \LessHydrator\ReflectionHydrator

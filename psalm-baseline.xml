@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<files psalm-version="4.30.0@d0bc6e25d89f649e4f36a534f330f8bb4643dd69">
-  <file src="src/ReflectionHydrator.php">
-    <DeprecatedClass occurrences="2">
-      <code>$attribute-&gt;newInstance()</code>
-      <code>DefaultValue::class</code>
-    </DeprecatedClass>
+<files psalm-version="5.18.0@b113f3ed0259fd6e212d87c3df80eec95a6abf19">
+  <file src="src/FakerHydrator.php">
+    <ImplementedReturnTypeMismatch>
+      <code>ValueObject</code>
+    </ImplementedReturnTypeMismatch>
+    <MixedArgumentTypeCoercion>
+      <code>$data</code>
+    </MixedArgumentTypeCoercion>
+    <MixedAssignment>
+      <code>$data</code>
+      <code><![CDATA[$data[$parameter->getName()]]]></code>
+    </MixedAssignment>
   </file>
 </files>

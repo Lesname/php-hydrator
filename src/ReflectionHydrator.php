@@ -5,6 +5,7 @@ namespace LessHydrator;
 
 use BackedEnum;
 use LessHydrator\Exception\MissingValue;
+use LessHydrator\Exception\InvalidDataType;
 use LessValueObject\Collection\CollectionValueObject;
 use LessValueObject\Enum\EnumValueObject;
 use LessValueObject\Number\Int\IntValueObject;
@@ -21,7 +22,6 @@ final class ReflectionHydrator implements Hydrator
 {
     /**
      * @param class-string<T> $className
-     * @param array<mixed>|int|float|string $data
      *
      * @template T of \LessValueObject\ValueObject
      *
@@ -30,7 +30,7 @@ final class ReflectionHydrator implements Hydrator
      * @throws ReflectionException
      * @throws MissingValue
      */
-    public function hydrate(string $className, array|int|float|string $data): ValueObject
+    public function hydrate(string $className, mixed $data): ValueObject
     {
         $hydrated = is_array($data)
             ? $this->hydrateFromArray($className, $data)
@@ -163,16 +163,17 @@ final class ReflectionHydrator implements Hydrator
 
     /**
      * @param class-string<ValueObject> $className
-     * @param int|float|string $data
      *
      * @return ValueObject
      */
-    private function hydrateFromScalar(string $className, int|float|string $data): ValueObject
+    private function hydrateFromScalar(string $className, mixed $data): ValueObject
     {
         if (is_subclass_of($className, NumberValueObject::class)) {
-            $data = is_subclass_of($className, IntValueObject::class)
-                ? (int)$data
-                : (float)$data;
+            if (is_int($data) || is_float($data)) {
+                return new $className($data);
+            }
+
+            throw new InvalidDataType();
         }
 
         if (
