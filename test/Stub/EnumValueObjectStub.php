@@ -2,7 +2,7 @@
 // phpcs:ignoreFile
 declare(strict_types=1);
 
-namespace LessHydratorTest;
+namespace LessHydratorTest\Stub;
 
 use LessValueObject\Enum\EnumValueObject;
 

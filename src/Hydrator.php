@@ -9,11 +9,10 @@ interface Hydrator
 {
     /**
      * @param class-string<T> $className
-     * @param array<mixed>|int|float|string $data
      *
      * @template T of \LessValueObject\ValueObject
      *
      * @return T
      */
-    public function hydrate(string $className, array|int|float|string $data): ValueObject;
+    public function hydrate(string $className, mixed $data): ValueObject;
 }

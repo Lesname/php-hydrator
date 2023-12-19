@@ -8,18 +8,18 @@
     - composer config gitlab-token.gitlab.com gitlab+deploy-token-713049 $REGISTERY_READ
     - composer update --prefer-dist
 
-.php81:
-  image: php:8.1
-  extends: .base
-
 stages:
   - quality
   - deploy
 
-# PHPStan
+# PHP 8.2
 
-phpstan81:
-  extends: .php81
+.php82:
+  image: php:8.2
+  extends: .base
+
+phpstan82:
+  extends: .php82
   stage: quality
   except:
     - main
@@ -27,10 +27,8 @@ phpstan81:
   script:
     - ./vendor/bin/phpstan analyse -c phpstan.neon
 
-# PHP code sniffer
-
-phpcs81:
-  extends: .php81
+phpcs82:
+  extends: .php82
   stage: quality
   except:
     - main
@@ -38,21 +36,41 @@ phpcs81:
   script:
     - ./vendor/bin/phpcs --standard=./phpcs.xml
 
-# PHPUnit
-
-phpunit81:
-  extends: .php81
+psalm82:
+  extends: .php82
   stage: quality
   except:
     - main
     - tags
   script:
-    - ./vendor/bin/phpunit -c phpunit.xml --do-not-cache-result
+    - ./vendor/bin/psalm
 
-# Psalm
+# PHP 8.3
 
-psalm81:
-  extends: .php81
+.php83:
+  image: php:8.3
+  extends: .base
+
+phpstan83:
+  extends: .php83
+  stage: quality
+  except:
+    - main
+    - tags
+  script:
+    - ./vendor/bin/phpstan analyse -c phpstan.neon
+
+phpcs83:
+  extends: .php83
+  stage: quality
+  except:
+    - main
+    - tags
+  script:
+    - ./vendor/bin/phpcs --standard=./phpcs.xml
+
+psalm83:
+  extends: .php83
   stage: quality
   except:
     - main
