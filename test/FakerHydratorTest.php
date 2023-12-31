@@ -3,15 +3,20 @@ declare(strict_types=1);
 
 namespace LessHydratorTest;
 
+use Random\Engine;
+use Random\Randomizer;
 use LessHydrator\FakerHydrator;
 use PHPUnit\Framework\TestCase;
 use LessValueObject\Enum\ContentType;
 use LessValueObject\String\PhoneNumber;
 use LessValueObject\Composite\Paginate;
+use LessHydratorTest\Stub\IntValueObjectStub;
 use LessValueObject\Number\Int\Date\Timestamp;
+use LessHydratorTest\Stub\EnumValueObjectStub;
 use LessValueObject\String\Format\EmailAddress;
 use LessValueObject\Number\AbstractNumberValueObject;
 use LessValueObject\Number\Int\AbstractIntValueObject;
+use LessValueObject\Composite\AbstractCompositeValueObject;
 use LessValueObject\Collection\AbstractCollectionValueObject;
 
 /**
@@ -146,5 +151,36 @@ class FakerHydratorTest extends TestCase
         $hydrated = $fakerHydrator->hydrate(Paginate::class, null);
 
         self::assertInstanceOf(Paginate::class, $hydrated);
+    }
+
+    public function testCompositeUnion(): void
+    {
+        $composite = new class (null) extends AbstractCompositeValueObject {
+            public function __construct(public readonly EnumValueObjectStub | IntValueObjectStub | null $value)
+            {}
+        };
+
+        $randomizer = function (int $int) {
+            return new Randomizer(
+                new class ($int) implements Engine {
+                    public function __construct(public readonly int $int)
+                    {}
+
+                    public function generate(): string
+                    {
+                        return pack('L', $this->int);
+                    }
+                },
+            );
+        };
+
+        $nullHydrated = (new FakerHydrator($randomizer(3)))->hydrate($composite::class, null);
+        self::assertSame(null, $nullHydrated->value);
+
+        $fizHydrated = (new FakerHydrator($randomizer(1)))->hydrate($composite::class, null);
+        self::assertSame(EnumValueObjectStub::Fiz, $fizHydrated->value);
+
+        $intHydrated = (new FakerHydrator($randomizer(2)))->hydrate($composite::class, null);
+        self::assertEquals(new IntValueObjectStub(3), $intHydrated->value);
     }
 }

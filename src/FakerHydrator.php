@@ -5,12 +5,14 @@ namespace LessHydrator;
 
 use ReflectionClass;
 use RuntimeException;
-use ReflectionMethod;
+use Random\Randomizer;
+use ReflectionException;
 use ReflectionParameter;
 use ReflectionNamedType;
-use ReflectionException;
+use ReflectionUnionType;
 use Random\RandomException;
 use LessValueObject\ValueObject;
+use LessHydrator\Exception\NoMatch;
 use LessValueObject\Enum\EnumValueObject;
 use LessValueObject\Attribute\DocExample;
 use LessHydrator\Exception\InvalidDataType;
@@ -18,166 +20,183 @@ use LessValueObject\Number\NumberValueObject;
 use LessValueObject\String\StringValueObject;
 use LessValueObject\Composite\CompositeValueObject;
 use LessValueObject\Collection\CollectionValueObject;
-use LessValueObject\Composite\DynamicCompositeValueObject;
 use LessValueObject\String\Format\StringFormatValueObject;
 
-final class FakerHydrator implements Hydrator
+final class FakerHydrator extends AbstractHydrator
 {
+    private readonly Randomizer $randomizer;
+    private readonly Hydrator $hydrator;
+
+    public function __construct(
+        ?Randomizer $randomizer = null,
+        ?Hydrator $hydrator = null,
+    ) {
+        $this->randomizer = $randomizer ?? new Randomizer();
+        $this->hydrator = $hydrator ?? new ReflectionHydrator();
+    }
+
     /**
      * @param class-string<T> $className
      *
-     * @return ValueObject
+     * @return T
      *
-     * @template T of ValueObject
-     *
-     * @throws InvalidDataType
-     * @throws RandomException
-     * @throws ReflectionException
+     * @template T of CollectionValueObject<ValueObject>
      */
-    public function hydrate(string $className, mixed $data): ValueObject
+    protected function hydrateCollection(string $className, mixed $data): CollectionValueObject
     {
-        return match (true) {
-            is_subclass_of($className, CollectionValueObject::class) => $this->hydrateCollection($className, $data),
-            is_subclass_of($className, CompositeValueObject::class) => $this->hydrateComposite($className, $data),
-            is_subclass_of($className, EnumValueObject::class) => $this->hydrateEnum($className, $data),
-            is_subclass_of($className, NumberValueObject::class) => $this->hydrateNumber($className, $data),
-            is_subclass_of($className, StringValueObject::class) => $this->hydrateString($className, $data),
-            default => throw new RuntimeException("{$className} unknown vo sub class"),
-        };
+        if (!is_array($data) && $data === null) {
+            $items = $this->randomizer->getInt($className::getMinimumSize(), $className::getMaximumSize());
+            $data = array_fill(0, $items, null);
+        }
+
+        return parent::hydrateCollection($className, $data);
     }
 
     /**
-     * @param class-string<CollectionValueObject<T>> $className
+     * @param class-string<T>|array<class-string<T>> $itemType
      *
-     * @return CollectionValueObject<T>
+     * @return T
      *
      * @template T of ValueObject
      *
+     * @throws NoMatch
      * @throws ReflectionException
-     * @throws RandomException
-     * @throws InvalidDataType
      */
-    private function hydrateCollection(string $className, mixed $data): CollectionValueObject
+    protected function hydrateCollectionItem(array | string $itemType, mixed $itemValue, mixed $data): ValueObject
     {
-        if (!is_array($data)) {
-            if ($data === null) {
-                $items = random_int($className::getMinimumSize(), $className::getMaximumSize());
-                $data = array_fill(0, $items, null);
+        if (is_array($itemType)) {
+            if ($itemValue !== null) {
+                $itemType = $this->matchType($itemType, $itemValue, $data);
+            } elseif (count($itemType) > 0) {
+                $itemType = $this->pickArrayItem($itemType);
             } else {
-                throw new InvalidDataType();
+                throw new RuntimeException();
             }
+
+            assert(class_exists($itemType));
         }
 
-        $itemType = $className::getItemType();
-
-        return new $className(
-            array_map(
-                fn ($item) => $this->hydrate($itemType, $item),
-                $data,
-            ),
-        );
+        return $this->hydrate($itemType, $itemValue);
     }
 
     /**
-     * @param class-string<CompositeValueObject> $className
+     * @param class-string<T> $className
+     *
+     * @return T
+     *
+     * @template T of CompositeValueObject
      *
      * @throws InvalidDataType
-     * @throws RandomException
+     */
+    protected function hydrateComposite(string $className, mixed $data): CompositeValueObject
+    {
+        return parent::hydrateComposite($className, $data ?? []);
+    }
+
+    /**
+     * @param array<mixed> $data
+     *
+     * @throws Exception\MissingValue
+     * @throws InvalidDataType
+     * @throws NoMatch
      * @throws ReflectionException
      */
-    private function hydrateComposite(string $className, mixed $data): CompositeValueObject
+    protected function hydrateCompositeParameter(ReflectionParameter $parameter, array $data): mixed
     {
-        $data ??= [];
+        if (!isset($data[$parameter->getName()])) {
+            $parameterType = $parameter->getType();
 
-        if (!is_array($data)) {
-            throw new InvalidDataType();
-        }
+            if ($parameterType === null) {
+                throw new RuntimeException();
+            }
 
-        if ($className === DynamicCompositeValueObject::class) {
-            return new DynamicCompositeValueObject($data);
-        }
+            $generate = !array_key_exists($parameter->getName(), $data)
+                ||
+                (
+                    $data[$parameter->getName()] === null
+                    &&
+                    !$parameterType->allowsNull()
+                );
 
-        $reflection = new ReflectionClass($className);
-        $constructor = $reflection->getConstructor();
+            if ($generate) {
+                if (!$parameterType instanceof ReflectionNamedType) {
+                    if ($parameterType instanceof ReflectionUnionType) {
+                        $unionTypes = $parameterType->getTypes();
+                        assert(count($unionTypes) > 0);
 
-        assert($constructor instanceof ReflectionMethod && count($constructor->getParameters()) > 0);
-
-        $parameters = array_map(
-            function (ReflectionParameter $parameter) use ($data): mixed {
-                if (!array_key_exists($parameter->getName(), $data)) {
-                    if ($parameter->isDefaultValueAvailable()) {
-                        $data[$parameter->getName()] = $parameter->getDefaultValue();
+                        $parameterType = $this->pickArrayItem($unionTypes);
+                    } else {
+                        throw new RuntimeException();
                     }
                 }
 
-                $type = $parameter->getType();
-                assert($type instanceof ReflectionNamedType);
-
-                if ($type->getName() === 'bool') {
-                    if (!array_key_exists($parameter->getName(), $data)) {
-                        $options = [true, false];
-
-                        if ($parameter->allowsNull()) {
-                            $options[] = null;
-                        }
-
-                        $data[$parameter->getName()] = $options[array_rand($options)];
-                    }
-
-                    return $data[$parameter->getName()];
-                }
-
-                if (!is_subclass_of($type->getName(), ValueObject::class)) {
+                if (!$parameterType instanceof ReflectionNamedType) {
                     throw new RuntimeException();
                 }
 
-                if (!array_key_exists($parameter->getName(), $data)) {
-                    // Only do null on 1/4 cases
-                    if ($parameter->allowsNull() && random_int(0, 3) === 2) {
-                        return null;
+                if ($parameterType->isBuiltin()) {
+                    $data[$parameter->getName()] = match ($parameterType->getName()) {
+                        'bool' => (bool)$this->randomizer->getInt(0, 1),
+                        'null' => null,
+                        default => throw new RuntimeException("Unsupported '{$parameterType->getName()}'"),
+                    };
+                } else {
+                    $typeName = $parameterType->getName();
+
+                    if (!class_exists($typeName)) {
+                        throw new RuntimeException();
                     }
 
-                    return $this->hydrate($type->getName(), null);
+                    if (!is_subclass_of($typeName, ValueObject::class)) {
+                        throw new RuntimeException();
+                    }
+
+                    $data[$parameter->getName()] = $this->hydrate($typeName, null);
                 }
+            }
+        }
 
-                return $this->hydrate($type->getName(), $data[$parameter->getName()] ?? null);
-            },
-            $constructor->getParameters(),
-        );
-
-        return new $className(...$parameters);
+        return parent::hydrateCompositeParameter($parameter, $data);
     }
 
     /**
-     * @param class-string<EnumValueObject> $className
+     * @param class-string<T> $className
+     *
+     * @return T
+     *
+     * @template T of EnumValueObject
      *
      * @throws InvalidDataType
      */
-    private function hydrateEnum(string $className, mixed $data): EnumValueObject
+    protected function hydrateEnum(string $className, mixed $data): EnumValueObject
     {
         if (!is_string($data)) {
             if ($data === null) {
                 $options = $className::cases();
-                $key = array_rand($options);
+                assert(count($options) > 0);
 
-                $data = $options[$key]->getValue();
+                $data = $this->pickArrayItem($options)->getValue();
             } else {
                 throw new InvalidDataType();
             }
         }
 
-        return $className::from($data);
+        return $this->hydrator->hydrate($className, $data);
     }
 
     /**
-     * @param class-string<NumberValueObject> $className
+     * @param class-string<T> $className
+     *
+     * @return T
+     *
+     * @template T of NumberValueObject
      *
      * @throws RandomException
      * @throws InvalidDataType
      *
      * @todo with php 8.3 random float is supported
      */
-    private function hydrateNumber(string $className, mixed $data): NumberValueObject
+    protected function hydrateNumber(string $className, mixed $data): NumberValueObject
     {
         if (!is_int($data) && !is_float($data)) {
             if (is_null($data)) {
@@ -188,14 +207,14 @@ final class FakerHydrator implements Hydrator
                     $maxRandom = (int)(($className::getMaximumValue() - $className::getMinimumValue()) / $className::getMultipleOf());
 
                     $selected = $maxRandom > 0
-                        ? random_int(0, $maxRandom)
+                        ? $this->randomizer->getInt(0, $maxRandom)
                         : 0;
 
                     $data = (int)$className::getMinimumValue() +  ($selected * $className::getMultipleOf());
                 } else {
                     $minSteps = (int)ceil($className::getMinimumValue() / $className::getMultipleOf());
                     $maxSteps = (int)floor($className::getMaximumValue() / $className::getMultipleOf());
-                    $randomSteps = random_int(0, (int)floor($maxSteps - $minSteps));
+                    $randomSteps = $this->randomizer->getInt(0, (int)floor($maxSteps - $minSteps));
 
                     $data = ($minSteps + $randomSteps) * $className::getMultipleOf();
                 }
@@ -204,17 +223,20 @@ final class FakerHydrator implements Hydrator
             }
         }
 
-        return new $className($data);
+        return $this->hydrator->hydrate($className, $data);
     }
 
     /**
-     * @param class-string<StringValueObject> $className
+     * @param class-string<T> $className
+     *
+     * @return T
+     *
+     * @template T of StringValueObject
      *
      * @throws InvalidDataType
-     * @throws RandomException
      * @throws ReflectionException
      */
-    private function hydrateString(string $className, mixed $data): StringValueObject
+    protected function hydrateString(string $className, mixed $data): StringValueObject
     {
         if (!is_string($data)) {
             if ($data === null) {
@@ -226,12 +248,9 @@ final class FakerHydrator implements Hydrator
                         throw new RuntimeException("Cannot generate value for '{$className}'");
                     }
 
-                    $attribute = $attributes[array_rand($attributes)]->newInstance();
-                    assert(is_string($attribute->example));
-
-                    $data = $attribute->example;
+                    $data = $this->pickArrayItem($attributes)->newInstance()->example;
                 } else {
-                    $length = random_int($className::getMinimumLength(), $className::getMaximumLength());
+                    $length = $this->randomizer->getInt($className::getMinimumLength(), $className::getMaximumLength());
                     $bytes = (int)ceil($length / 2);
 
                     if ($bytes < 1) {
@@ -239,7 +258,7 @@ final class FakerHydrator implements Hydrator
                     }
 
                     $data = substr(
-                        bin2hex(random_bytes($bytes)),
+                        bin2hex($this->randomizer->getBytes($bytes)),
                         0,
                         $length,
                     );
@@ -249,6 +268,18 @@ final class FakerHydrator implements Hydrator
             }
         }
 
-        return new $className($data);
+        return $this->hydrator->hydrate($className, $data);
+    }
+
+    /**
+     * @param non-empty-array<T> $array
+     *
+     * @return T
+     *
+     * @template T
+     */
+    private function pickArrayItem(array $array)
+    {
+        return $this->randomizer->shuffleArray($array)[0];
     }
 }
