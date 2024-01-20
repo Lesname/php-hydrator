@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace LessHydrator;
 
-use T;
 use ReflectionClass;
 use RuntimeException;
 use ReflectionMethod;
