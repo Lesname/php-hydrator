@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace LessHydrator;
 
+use Throwable;
 use ReflectionClass;
 use RuntimeException;
 use ReflectionMethod;
@@ -10,7 +11,6 @@ use ReflectionException;
 use ReflectionParameter;
 use ReflectionNamedType;
 use ReflectionUnionType;
-use Random\RandomException;
 use LessValueObject\ValueObject;
 use LessHydrator\Exception\NoMatch;
 use LessHydrator\Attribute\TypeMatch;
@@ -82,7 +82,6 @@ abstract class AbstractHydrator implements Hydrator
      *
      * @throws InvalidDataType
      * @throws ReflectionException
-     * @throws RandomException
      */
     protected function hydrateComposite(string $className, mixed $data): CompositeValueObject
     {
@@ -99,7 +98,13 @@ abstract class AbstractHydrator implements Hydrator
             assert($constructor instanceof ReflectionMethod && count($constructor->getParameters()) > 0);
 
             $parameters = array_map(
-                fn (ReflectionParameter $parameter): mixed => $this->hydrateCompositeParameter($parameter, $data),
+                function (ReflectionParameter $parameter) use ($data): mixed {
+                    try {
+                        return $this->hydrateCompositeParameter($parameter, $data);
+                    } catch (Throwable $e) {
+                        throw new RuntimeException("Failed {$parameter->getName()}", previous: $e);
+                    }
+                },
                 $constructor->getParameters(),
             );
         }
@@ -145,7 +150,7 @@ abstract class AbstractHydrator implements Hydrator
                     return $this->toBoolean($value);
                 }
 
-                throw new RuntimeException();
+                throw new RuntimeException("Builtin '{$type->getName()}' not supported");
             }
 
             $typeName = $type->getName();
@@ -159,7 +164,7 @@ abstract class AbstractHydrator implements Hydrator
 
                         if (class_exists($subTypeName)) {
                             if (!is_subclass_of($subTypeName, ValueObject::class)) {
-                                throw new RuntimeException();
+                                throw new RuntimeException("'{$subTypeName}' is not an value object");
                             }
 
                             yield $subTypeName;
@@ -170,7 +175,7 @@ abstract class AbstractHydrator implements Hydrator
                 $data,
             );
         } else {
-            throw new RuntimeException();
+            throw new RuntimeException("Unhandled reflection type");
         }
 
         if ($value instanceof $typeName) {
@@ -178,11 +183,11 @@ abstract class AbstractHydrator implements Hydrator
         }
 
         if (!class_exists($typeName)) {
-            throw new RuntimeException();
+            throw new RuntimeException("'{$typeName}' is not a class");
         }
 
         if (!is_subclass_of($typeName, ValueObject::class)) {
-            throw new RuntimeException();
+            throw new RuntimeException("'{$typeName}' is not a value object");
         }
 
         return $this->hydrate($typeName, $value);
