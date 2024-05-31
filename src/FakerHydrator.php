@@ -251,17 +251,19 @@ final class FakerHydrator extends AbstractHydrator
                     $data = $this->pickArrayItem($attributes)->newInstance()->example;
                 } else {
                     $length = $this->randomizer->getInt($className::getMinimumLength(), $className::getMaximumLength());
-                    $bytes = (int)ceil($length / 2);
 
-                    if ($bytes < 1) {
-                        throw new RuntimeException();
+                    if ($length === 0) {
+                        $data = '';
+                    } else {
+                        $bytes = (int)ceil($length / 2);
+
+                        if ($bytes < 1) {
+                            throw new RuntimeException();
+                        }
+
+                        $hex = bin2hex($this->randomizer->getBytes($bytes));
+                        $data = substr($hex, 0, $length);
                     }
-
-                    $data = substr(
-                        bin2hex($this->randomizer->getBytes($bytes)),
-                        0,
-                        $length,
-                    );
                 }
             } else {
                 throw new InvalidDataType();
