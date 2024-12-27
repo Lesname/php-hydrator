@@ -81,6 +81,7 @@ abstract class AbstractHydrator implements Hydrator
      *
      * @template T of CompositeValueObject
      *
+     * @throws ParameterFailure
      * @throws InvalidDataType
      * @throws ReflectionException
      */
@@ -96,18 +97,20 @@ abstract class AbstractHydrator implements Hydrator
             $reflection = new ReflectionClass($className);
             $constructor = $reflection->getConstructor();
 
-            assert($constructor instanceof ReflectionMethod && count($constructor->getParameters()) > 0);
-
-            $parameters = array_map(
-                function (ReflectionParameter $parameter) use ($data): mixed {
-                    try {
-                        return $this->hydrateCompositeParameter($parameter, $data);
-                    } catch (Throwable $e) {
-                        throw new ParameterFailure($parameter->getName(), $e);
-                    }
-                },
-                $constructor->getParameters(),
-            );
+            if ($constructor instanceof ReflectionMethod) {
+                $parameters = array_map(
+                    function (ReflectionParameter $parameter) use ($data): mixed {
+                        try {
+                            return $this->hydrateCompositeParameter($parameter, $data);
+                        } catch (Throwable $e) {
+                            throw new ParameterFailure($parameter->getName(), $e);
+                        }
+                    },
+                    $constructor->getParameters(),
+                );
+            } else {
+                $parameters = [];
+            }
         }
 
         return new $className(...$parameters);

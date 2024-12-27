@@ -246,19 +246,6 @@ final class ReflectionHydratorTest extends TestCase
         $hydrator->hydrate(stdClass::class, []);
     }
 
-    public function testCompositeEmptyConstructor(): void
-    {
-        $this->expectException(Throwable::class);
-
-        $paginate = new class () extends AbstractCompositeValueObject {
-            public function __construct()
-            {}
-        };
-
-        $hydrator = new ReflectionHydrator();
-        $hydrator->hydrate($paginate::class, []);
-    }
-
     public function testMissing(): void
     {
         $this->expectException(ParameterFailure::class);
