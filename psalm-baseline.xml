@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="5.18.0@b113f3ed0259fd6e212d87c3df80eec95a6abf19">
+  <file src="src/AbstractHydrator.php">
+    <InvalidReturnStatement>
+      <code><![CDATA[match (true) {
+            is_subclass_of($className, CollectionValueObject::class) => $this->hydrateCollection($className, $data),
+            is_subclass_of($className, CompositeValueObject::class) => $this->hydrateComposite($className, $data),
+            is_subclass_of($className, EnumValueObject::class) => $this->hydrateEnum($className, $data),
+            is_subclass_of($className, NumberValueObject::class) => $this->hydrateNumber($className, $data),
+            is_subclass_of($className, StringValueObject::class) => $this->hydrateString($className, $data),
+            default => throw new RuntimeException("{$className} unknown vo sub class"),
+        }]]></code>
+    </InvalidReturnStatement>
+    <InvalidReturnType>
+      <code>T</code>
+    </InvalidReturnType>
+    <MixedAssignment>
+      <code><![CDATA[$data[$parameter->getName()]]]></code>
+      <code>$value</code>
+    </MixedAssignment>
+  </file>
+  <file src="src/FakerHydrator.php">
+    <MixedInferredReturnType>
+      <code>T</code>
+    </MixedInferredReturnType>
+    <MixedReturnStatement>
+      <code><![CDATA[$this->randomizer->shuffleArray($array)[0]]]></code>
+    </MixedReturnStatement>
+    <RedundantCondition>
+      <code><![CDATA[assert(count($unionTypes) > 0)]]></code>
+    </RedundantCondition>
+  </file>
+</files>

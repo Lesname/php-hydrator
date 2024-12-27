@@ -2,13 +2,17 @@
 // phpcs:ignoreFile
 declare(strict_types=1);
 
-namespace LessHydratorTest;
+namespace LessHydratorTest\Stub;
 
+use LessHydrator\Attribute\TypeMatch;
+use LessHydrator\Matcher\ExactMatcher;
 use LessValueObject\Enum\EnumValueObject;
 
 /**
  * @psalm-immutable
  */
+#[TypeMatch(new ExactMatcher('fiz'))]
+#[TypeMatch(new ExactMatcher('biz'))]
 enum EnumValueObjectStub: string implements EnumValueObject
 {
     case Fiz = 'fiz';
