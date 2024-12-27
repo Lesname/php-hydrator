@@ -17,6 +17,7 @@ use LessHydrator\Attribute\TypeMatch;
 use LessHydrator\Exception\MissingValue;
 use LessValueObject\Enum\EnumValueObject;
 use LessHydrator\Exception\InvalidDataType;
+use LessHydrator\Exception\ParameterFailure;
 use LessValueObject\Number\NumberValueObject;
 use LessValueObject\String\StringValueObject;
 use LessValueObject\Composite\CompositeValueObject;
@@ -102,7 +103,7 @@ abstract class AbstractHydrator implements Hydrator
                     try {
                         return $this->hydrateCompositeParameter($parameter, $data);
                     } catch (Throwable $e) {
-                        throw new RuntimeException("Failed {$parameter->getName()}", previous: $e);
+                        throw new ParameterFailure($parameter->getName(), $e);
                     }
                 },
                 $constructor->getParameters(),

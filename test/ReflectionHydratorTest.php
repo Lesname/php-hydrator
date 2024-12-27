@@ -9,10 +9,9 @@ use RuntimeException;
 use PHPUnit\Framework\TestCase;
 use LessHydratorTest\Stub\FooStub;
 use LessHydratorTest\Stub\BarStub;
-use LessHydrator\Exception\NoMatch;
 use LessHydrator\ReflectionHydrator;
-use LessHydrator\Exception\MissingValue;
 use LessValueObject\Number\Int\Positive;
+use LessHydrator\Exception\ParameterFailure;
 use LessValueObject\Number\Int\Paginate\Page;
 use LessValueObject\String\Format\SearchTerm;
 use LessHydratorTest\Stub\IntValueObjectStub;
@@ -227,7 +226,7 @@ final class ReflectionHydratorTest extends TestCase
 
     public function testCompositeUnionNoTypeMatch(): void
     {
-        $this->expectException(NoMatch::class);
+        $this->expectException(ParameterFailure::class);
 
         $composite = new class (null) extends AbstractCompositeValueObject {
             public function __construct(public readonly EnumValueObjectStub | IntValueObjectStub | null $value)
@@ -262,7 +261,7 @@ final class ReflectionHydratorTest extends TestCase
 
     public function testMissing(): void
     {
-        $this->expectException(MissingValue::class);
+        $this->expectException(ParameterFailure::class);
 
         $paginate = new class (1) extends AbstractCompositeValueObject {
             public function __construct(public int $foo)
