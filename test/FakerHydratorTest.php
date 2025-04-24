@@ -1,26 +1,27 @@
 <?php
 declare(strict_types=1);
 
-namespace LessHydratorTest;
+namespace LesHydratorTest;
 
 use Random\Engine;
 use Random\Randomizer;
-use LessHydrator\FakerHydrator;
+use LesHydrator\FakerHydrator;
 use PHPUnit\Framework\TestCase;
-use LessValueObject\Enum\ContentType;
-use LessValueObject\String\PhoneNumber;
-use LessValueObject\Composite\Paginate;
-use LessHydratorTest\Stub\IntValueObjectStub;
-use LessValueObject\Number\Int\Date\Timestamp;
-use LessHydratorTest\Stub\EnumValueObjectStub;
-use LessValueObject\String\Format\EmailAddress;
-use LessValueObject\Number\AbstractNumberValueObject;
-use LessValueObject\Number\Int\AbstractIntValueObject;
-use LessValueObject\Composite\AbstractCompositeValueObject;
-use LessValueObject\Collection\AbstractCollectionValueObject;
+use LesValueObject\Enum\ContentType;
+use LesValueObject\String\PhoneNumber;
+use LesValueObject\Composite\Paginate;
+use LesHydratorTest\Stub\IntValueObjectStub;
+use LesValueObject\Number\Int\Date\Timestamp;
+use LesHydratorTest\Stub\EnumValueObjectStub;
+use LesValueObject\String\Format\EmailAddress;
+use LesValueObject\Number\AbstractNumberValueObject;
+use LesValueObject\Number\Int\AbstractIntValueObject;
+use LesValueObject\Number\Float\AbstractFloatValueObject;
+use LesValueObject\Composite\AbstractCompositeValueObject;
+use LesValueObject\Collection\AbstractCollectionValueObject;
 
 /**
- * @covers \LessHydrator\FakerHydrator
+ * @covers \LesHydrator\FakerHydrator
  */
 class FakerHydratorTest extends TestCase
 {
@@ -33,7 +34,7 @@ class FakerHydratorTest extends TestCase
 
         self::assertInstanceOf(Timestamp::class, $faked);
         self::assertInstanceOf(Timestamp::class, $filled);
-        self::assertSame(3, $filled->getValue());
+        self::assertSame(3, $filled->value);
     }
 
     public function testIntWithMultiple(): void
@@ -62,12 +63,12 @@ class FakerHydratorTest extends TestCase
 
         self::assertInstanceOf($class::class, $faked);
         self::assertInstanceOf($class::class, $filled);
-        self::assertSame(2, $filled->getValue());
+        self::assertSame(2, $filled->value);
     }
 
     public function testFloat(): void
     {
-        $vo = new class (3.3) extends AbstractNumberValueObject {
+        $vo = new class (3.3) extends AbstractFloatValueObject {
             public static function getMinimumValue(): int|float
             {
                 return 2;

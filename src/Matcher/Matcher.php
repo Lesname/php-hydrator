@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace LessHydrator\Matcher;
+namespace LesHydrator\Matcher;
 
 /**
  * @psalm-immutable

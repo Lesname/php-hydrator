@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace LessHydratorTest\Exception;
+namespace LesHydratorTest\Exception;
 
-use LessHydrator\Exception\MissingValue;
+use LesHydrator\Exception\MissingValue;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \LessHydrator\Exception\MissingValue
+ * @covers \LesHydrator\Exception\MissingValue
  */
 final class MissingValueTest extends TestCase
 {

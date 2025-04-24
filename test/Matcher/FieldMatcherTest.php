@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace LessHydratorTest\Matcher;
+namespace LesHydratorTest\Matcher;
 
-use LessHydrator\Matcher\FieldMatcher;
+use LesHydrator\Matcher\FieldMatcher;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \LessHydrator\Matcher\FieldMatcher
+ * @covers \LesHydrator\Matcher\FieldMatcher
  */
 class FieldMatcherTest extends TestCase
 {

@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace LessHydrator\Attribute;
+namespace LesHydrator\Attribute;
 
 use Attribute;
-use LessHydrator\Matcher\Matcher;
+use LesHydrator\Matcher\Matcher;
 
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 final class TypeMatch

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace LessHydrator;
+namespace LesHydrator;
 
 use ReflectionClass;
 use RuntimeException;
@@ -11,16 +11,16 @@ use ReflectionParameter;
 use ReflectionNamedType;
 use ReflectionUnionType;
 use Random\RandomException;
-use LessValueObject\ValueObject;
-use LessHydrator\Exception\NoMatch;
-use LessValueObject\Enum\EnumValueObject;
-use LessValueObject\Attribute\DocExample;
-use LessHydrator\Exception\InvalidDataType;
-use LessValueObject\Number\NumberValueObject;
-use LessValueObject\String\StringValueObject;
-use LessValueObject\Composite\CompositeValueObject;
-use LessValueObject\Collection\CollectionValueObject;
-use LessValueObject\String\Format\StringFormatValueObject;
+use LesValueObject\ValueObject;
+use LesHydrator\Exception\NoMatch;
+use LesValueObject\Enum\EnumValueObject;
+use LesValueObject\Attribute\DocExample;
+use LesHydrator\Exception\InvalidDataType;
+use LesValueObject\Number\NumberValueObject;
+use LesValueObject\String\StringValueObject;
+use LesValueObject\Composite\CompositeValueObject;
+use LesValueObject\Collection\CollectionValueObject;
+use LesValueObject\String\Format\StringFormatValueObject;
 
 final class FakerHydrator extends AbstractHydrator
 {
@@ -175,7 +175,7 @@ final class FakerHydrator extends AbstractHydrator
                 $options = $className::cases();
                 assert(count($options) > 0);
 
-                $data = $this->pickArrayItem($options)->getValue();
+                $data = $this->pickArrayItem($options)->value;
             } else {
                 throw new InvalidDataType();
             }

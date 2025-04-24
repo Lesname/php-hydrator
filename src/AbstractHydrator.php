@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace LessHydrator;
+namespace LesHydrator;
 
 use Throwable;
 use ReflectionClass;
@@ -11,18 +11,18 @@ use ReflectionException;
 use ReflectionParameter;
 use ReflectionNamedType;
 use ReflectionUnionType;
-use LessValueObject\ValueObject;
-use LessHydrator\Exception\NoMatch;
-use LessHydrator\Attribute\TypeMatch;
-use LessHydrator\Exception\MissingValue;
-use LessValueObject\Enum\EnumValueObject;
-use LessHydrator\Exception\InvalidDataType;
-use LessHydrator\Exception\ParameterFailure;
-use LessValueObject\Number\NumberValueObject;
-use LessValueObject\String\StringValueObject;
-use LessValueObject\Composite\CompositeValueObject;
-use LessValueObject\Collection\CollectionValueObject;
-use LessValueObject\Composite\DynamicCompositeValueObject;
+use LesValueObject\ValueObject;
+use LesHydrator\Exception\NoMatch;
+use LesHydrator\Attribute\TypeMatch;
+use LesHydrator\Exception\MissingValue;
+use LesValueObject\Enum\EnumValueObject;
+use LesHydrator\Exception\InvalidDataType;
+use LesHydrator\Exception\ParameterFailure;
+use LesValueObject\Number\NumberValueObject;
+use LesValueObject\String\StringValueObject;
+use LesValueObject\Composite\CompositeValueObject;
+use LesValueObject\Collection\CollectionValueObject;
+use LesValueObject\Composite\DynamicCompositeValueObject;
 
 abstract class AbstractHydrator implements Hydrator
 {
