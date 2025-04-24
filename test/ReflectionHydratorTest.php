@@ -1,36 +1,36 @@
 <?php
 declare(strict_types=1);
 
-namespace LessHydratorTest;
+namespace LesHydratorTest;
 
 use stdClass;
 use Throwable;
 use RuntimeException;
 use PHPUnit\Framework\TestCase;
-use LessHydratorTest\Stub\FooStub;
-use LessHydratorTest\Stub\BarStub;
-use LessHydrator\ReflectionHydrator;
-use LessValueObject\Number\Int\Positive;
-use LessHydrator\Exception\ParameterFailure;
-use LessValueObject\Number\Int\Paginate\Page;
-use LessValueObject\String\Format\SearchTerm;
-use LessHydratorTest\Stub\IntValueObjectStub;
-use LessHydratorTest\Stub\EnumValueObjectStub;
-use LessValueObject\Number\Int\Paginate\PerPage;
-use LessValueObject\Collection\CollectionValueObject;
-use LessValueObject\Number\AbstractNumberValueObject;
-use LessValueObject\Number\Int\AbstractIntValueObject;
-use LessValueObject\Composite\AbstractCompositeValueObject;
-use LessValueObject\Collection\AbstractCollectionValueObject;
+use LesHydratorTest\Stub\FooStub;
+use LesHydratorTest\Stub\BarStub;
+use LesHydrator\ReflectionHydrator;
+use LesValueObject\Number\Int\Positive;
+use LesHydrator\Exception\ParameterFailure;
+use LesValueObject\Number\Int\Paginate\Page;
+use LesValueObject\String\Format\SearchTerm;
+use LesHydratorTest\Stub\IntValueObjectStub;
+use LesHydratorTest\Stub\EnumValueObjectStub;
+use LesValueObject\Number\Int\Paginate\PerPage;
+use LesValueObject\Collection\CollectionValueObject;
+use LesValueObject\Number\Int\AbstractIntValueObject;
+use LesValueObject\Number\Float\AbstractFloatValueObject;
+use LesValueObject\Composite\AbstractCompositeValueObject;
+use LesValueObject\Collection\AbstractCollectionValueObject;
 
 /**
- * @covers \LessHydrator\ReflectionHydrator
+ * @covers \LesHydrator\ReflectionHydrator
  */
 final class ReflectionHydratorTest extends TestCase
 {
-    public function testNumber(): void
+    public function testFloat(): void
     {
-        $class = new class (2) extends AbstractNumberValueObject {
+        $class = new class (2) extends AbstractFloatValueObject {
             public static function getMultipleOf(): float|int
             {
                 return .01;
@@ -50,7 +50,7 @@ final class ReflectionHydratorTest extends TestCase
         $hydrator = new ReflectionHydrator();
         $result = $hydrator->hydrate($class::class, '3.12');
 
-        self::assertSame(3.12, $result->getValue());
+        self::assertSame(3.12, $result->value);
     }
 
     public function testInt(): void
@@ -70,7 +70,7 @@ final class ReflectionHydratorTest extends TestCase
         $hydrator = new ReflectionHydrator();
         $result = $hydrator->hydrate($class::class, '3');
 
-        self::assertSame(3, $result->getValue());
+        self::assertSame(3, $result->value);
     }
 
     public function testEnum(): void
@@ -180,7 +180,7 @@ final class ReflectionHydratorTest extends TestCase
 
         self::assertEquals(new SearchTerm('123'), $hydrated->term);
         self::assertSame($perPage, $hydrated->perPage);
-        self::assertSame(3, $hydrated->page->getValue());
+        self::assertSame(3, $hydrated->page->value);
         self::assertNull($hydrated->int);
         self::assertFalse($hydrated->biz);
     }
@@ -193,18 +193,20 @@ final class ReflectionHydratorTest extends TestCase
         };
 
         $hydrator = new ReflectionHydrator();
+        $enum = new $composite(EnumValueObjectStub::Fiz);
+        $int = new $composite(new IntValueObjectStub(2));
 
         self::assertEquals(
-            $hydrator->hydrate($composite::class, ['value' => 'fiz']),
-            new $composite(EnumValueObjectStub::Fiz),
+            $hydrator->hydrate($composite::class, ['value' => 'fiz'])->value,
+            $enum->value,
         );
         self::assertEquals(
-            $hydrator->hydrate($composite::class, ['value' => 2]),
-            new $composite(new IntValueObjectStub(2)),
+            $hydrator->hydrate($composite::class, ['value' => 2])->value,
+            $int->value,
         );
         self::assertEquals(
-            $hydrator->hydrate($composite::class, ['value' => null]),
-            new $composite(null),
+            $hydrator->hydrate($composite::class, ['value' => null])->value,
+            $composite->value,
         );
     }
 
@@ -221,7 +223,8 @@ final class ReflectionHydratorTest extends TestCase
         };
 
         $hydrator = new ReflectionHydrator();
-        $hydrator->hydrate($composite::class, ['value' => 1]);
+        $hydrated = $hydrator->hydrate($composite::class, ['value' => 1]);
+        $hydrated->value;
     }
 
     public function testCompositeUnionNoTypeMatch(): void
@@ -235,7 +238,8 @@ final class ReflectionHydratorTest extends TestCase
 
         $hydrator = new ReflectionHydrator();
 
-        $hydrator->hydrate($composite::class, ['value' => 'bar']);
+        $hydrated = $hydrator->hydrate($composite::class, ['value' => 'bar']);
+        $hydrated->value;
     }
 
     public function testNonValueObject(): void
@@ -256,7 +260,8 @@ final class ReflectionHydratorTest extends TestCase
         };
 
         $hydrator = new ReflectionHydrator();
-        $hydrator->hydrate($paginate::class, []);
+        $hydrated = $hydrator->hydrate($paginate::class, []);
+        $hydrated->value;
     }
 
     public function testCompositeDefaultValue(): void

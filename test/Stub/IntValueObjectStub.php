@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace LessHydratorTest\Stub;
+namespace LesHydratorTest\Stub;
 
-use LessHydrator\Attribute\TypeMatch;
-use LessHydrator\Matcher\ExactMatcher;
-use LessValueObject\Number\Int\AbstractIntValueObject;
+use LesHydrator\Attribute\TypeMatch;
+use LesHydrator\Matcher\ExactMatcher;
+use LesValueObject\Number\Int\AbstractIntValueObject;
 
 /**
  * @psalm-immutable

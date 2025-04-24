@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace LessHydrator\Exception;
+namespace LesHydrator\Exception;
 
 use Exception;
 

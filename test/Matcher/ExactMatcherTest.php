@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace LessHydratorTest\Matcher;
+namespace LesHydratorTest\Matcher;
 
-use LessHydrator\Matcher\ExactMatcher;
+use LesHydrator\Matcher\ExactMatcher;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \LessHydrator\Matcher\ExactMatcher
+ * @covers \LesHydrator\Matcher\ExactMatcher
  */
 class ExactMatcherTest extends TestCase
 {

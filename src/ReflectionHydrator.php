@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace LessHydrator;
+namespace LesHydrator;
 
-use LessHydrator\Exception\NoMatch;
-use LessValueObject\String\StringValueObject;
-use LessValueObject\Enum\EnumValueObject;
-use LessValueObject\Number\NumberValueObject;
-use LessValueObject\ValueObject;
+use LesHydrator\Exception\NoMatch;
+use LesValueObject\String\StringValueObject;
+use LesValueObject\Enum\EnumValueObject;
+use LesValueObject\Number\NumberValueObject;
+use LesValueObject\ValueObject;
 use ReflectionException;
 
 final class ReflectionHydrator extends AbstractHydrator

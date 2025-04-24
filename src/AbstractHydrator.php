@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace LessHydrator;
+namespace LesHydrator;
 
 use Throwable;
 use ReflectionClass;
@@ -11,18 +11,18 @@ use ReflectionException;
 use ReflectionParameter;
 use ReflectionNamedType;
 use ReflectionUnionType;
-use LessValueObject\ValueObject;
-use LessHydrator\Exception\NoMatch;
-use LessHydrator\Attribute\TypeMatch;
-use LessHydrator\Exception\MissingValue;
-use LessValueObject\Enum\EnumValueObject;
-use LessHydrator\Exception\InvalidDataType;
-use LessHydrator\Exception\ParameterFailure;
-use LessValueObject\Number\NumberValueObject;
-use LessValueObject\String\StringValueObject;
-use LessValueObject\Composite\CompositeValueObject;
-use LessValueObject\Collection\CollectionValueObject;
-use LessValueObject\Composite\DynamicCompositeValueObject;
+use LesValueObject\ValueObject;
+use LesHydrator\Exception\NoMatch;
+use LesHydrator\Attribute\TypeMatch;
+use LesHydrator\Exception\MissingValue;
+use LesValueObject\Enum\EnumValueObject;
+use LesHydrator\Exception\InvalidDataType;
+use LesHydrator\Exception\ParameterFailure;
+use LesValueObject\Number\NumberValueObject;
+use LesValueObject\String\StringValueObject;
+use LesValueObject\Composite\CompositeValueObject;
+use LesValueObject\Collection\CollectionValueObject;
+use LesValueObject\Composite\DynamicCompositeValueObject;
 
 abstract class AbstractHydrator implements Hydrator
 {
@@ -81,7 +81,6 @@ abstract class AbstractHydrator implements Hydrator
      *
      * @template T of CompositeValueObject
      *
-     * @throws ParameterFailure
      * @throws InvalidDataType
      * @throws ReflectionException
      */
@@ -91,29 +90,38 @@ abstract class AbstractHydrator implements Hydrator
             throw new InvalidDataType();
         }
 
-        if ($className === DynamicCompositeValueObject::class) {
-            $parameters = [$data];
-        } else {
-            $reflection = new ReflectionClass($className);
-            $constructor = $reflection->getConstructor();
-
-            if ($constructor instanceof ReflectionMethod) {
-                $parameters = array_map(
-                    function (ReflectionParameter $parameter) use ($data): mixed {
-                        try {
-                            return $this->hydrateCompositeParameter($parameter, $data);
-                        } catch (Throwable $e) {
-                            throw new ParameterFailure($parameter->getName(), $e);
-                        }
-                    },
-                    $constructor->getParameters(),
-                );
-            } else {
-                $parameters = [];
+        $initializer = function (CompositeValueObject $compositeValueObject) use ($className, $data) {
+            if (!method_exists($compositeValueObject, '__construct')) {
+                throw new RuntimeException("{$className} does not have a __construct() method");
             }
-        }
 
-        return new $className(...$parameters);
+            if ($className === DynamicCompositeValueObject::class) {
+                $parameters = [$data];
+            } else {
+                $reflection = new ReflectionClass($className);
+                $constructor = $reflection->getConstructor();
+
+                if ($constructor instanceof ReflectionMethod) {
+                    $parameters = array_map(
+                        function (ReflectionParameter $parameter) use ($data): mixed {
+                            try {
+                                return $this->hydrateCompositeParameter($parameter, $data);
+                            } catch (Throwable $e) {
+                                throw new ParameterFailure($parameter->getName(), $e);
+                            }
+                        },
+                        $constructor->getParameters(),
+                    );
+                } else {
+                    $parameters = [];
+                }
+            }
+
+            $compositeValueObject->__construct(...$parameters);
+        };
+
+        $reflector = new ReflectionClass($className);
+        return $reflector->newLazyGhost($initializer);
     }
 
     /**

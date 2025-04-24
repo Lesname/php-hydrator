@@ -2,11 +2,11 @@
 // phpcs:ignoreFile
 declare(strict_types=1);
 
-namespace LessHydratorTest\Stub;
+namespace LesHydratorTest\Stub;
 
-use LessHydrator\Attribute\TypeMatch;
-use LessHydrator\Matcher\ExactMatcher;
-use LessValueObject\Enum\EnumValueObject;
+use LesHydrator\Attribute\TypeMatch;
+use LesHydrator\Matcher\ExactMatcher;
+use LesValueObject\Enum\EnumValueObject;
 
 /**
  * @psalm-immutable

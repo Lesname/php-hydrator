@@ -1,16 +1,16 @@
 <?php
 declare(strict_types=1);
 
-namespace LessHydrator;
+namespace LesHydrator;
 
-use LessValueObject\ValueObject;
+use LesValueObject\ValueObject;
 
 interface Hydrator
 {
     /**
      * @param class-string<T> $className
      *
-     * @template T of \LessValueObject\ValueObject
+     * @template T of \LesValueObject\ValueObject
      *
      * @return T
      */
