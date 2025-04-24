@@ -193,18 +193,20 @@ final class ReflectionHydratorTest extends TestCase
         };
 
         $hydrator = new ReflectionHydrator();
+        $enum = new $composite(EnumValueObjectStub::Fiz);
+        $int = new $composite(new IntValueObjectStub(2));
 
         self::assertEquals(
-            $hydrator->hydrate($composite::class, ['value' => 'fiz']),
-            new $composite(EnumValueObjectStub::Fiz),
+            $hydrator->hydrate($composite::class, ['value' => 'fiz'])->value,
+            $enum->value,
         );
         self::assertEquals(
-            $hydrator->hydrate($composite::class, ['value' => 2]),
-            new $composite(new IntValueObjectStub(2)),
+            $hydrator->hydrate($composite::class, ['value' => 2])->value,
+            $int->value,
         );
         self::assertEquals(
-            $hydrator->hydrate($composite::class, ['value' => null]),
-            new $composite(null),
+            $hydrator->hydrate($composite::class, ['value' => null])->value,
+            $composite->value,
         );
     }
 
@@ -221,7 +223,8 @@ final class ReflectionHydratorTest extends TestCase
         };
 
         $hydrator = new ReflectionHydrator();
-        $hydrator->hydrate($composite::class, ['value' => 1]);
+        $hydrated = $hydrator->hydrate($composite::class, ['value' => 1]);
+        $hydrated->value;
     }
 
     public function testCompositeUnionNoTypeMatch(): void
@@ -235,7 +238,8 @@ final class ReflectionHydratorTest extends TestCase
 
         $hydrator = new ReflectionHydrator();
 
-        $hydrator->hydrate($composite::class, ['value' => 'bar']);
+        $hydrated = $hydrator->hydrate($composite::class, ['value' => 'bar']);
+        $hydrated->value;
     }
 
     public function testNonValueObject(): void
@@ -256,7 +260,8 @@ final class ReflectionHydratorTest extends TestCase
         };
 
         $hydrator = new ReflectionHydrator();
-        $hydrator->hydrate($paginate::class, []);
+        $hydrated = $hydrator->hydrate($paginate::class, []);
+        $hydrated->value;
     }
 
     public function testCompositeDefaultValue(): void

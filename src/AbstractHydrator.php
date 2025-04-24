@@ -81,7 +81,6 @@ abstract class AbstractHydrator implements Hydrator
      *
      * @template T of CompositeValueObject
      *
-     * @throws ParameterFailure
      * @throws InvalidDataType
      * @throws ReflectionException
      */
@@ -91,29 +90,38 @@ abstract class AbstractHydrator implements Hydrator
             throw new InvalidDataType();
         }
 
-        if ($className === DynamicCompositeValueObject::class) {
-            $parameters = [$data];
-        } else {
-            $reflection = new ReflectionClass($className);
-            $constructor = $reflection->getConstructor();
-
-            if ($constructor instanceof ReflectionMethod) {
-                $parameters = array_map(
-                    function (ReflectionParameter $parameter) use ($data): mixed {
-                        try {
-                            return $this->hydrateCompositeParameter($parameter, $data);
-                        } catch (Throwable $e) {
-                            throw new ParameterFailure($parameter->getName(), $e);
-                        }
-                    },
-                    $constructor->getParameters(),
-                );
-            } else {
-                $parameters = [];
+        $initializer = function (CompositeValueObject $compositeValueObject) use ($className, $data) {
+            if (!method_exists($compositeValueObject, '__construct')) {
+                throw new RuntimeException("{$className} does not have a __construct() method");
             }
-        }
 
-        return new $className(...$parameters);
+            if ($className === DynamicCompositeValueObject::class) {
+                $parameters = [$data];
+            } else {
+                $reflection = new ReflectionClass($className);
+                $constructor = $reflection->getConstructor();
+
+                if ($constructor instanceof ReflectionMethod) {
+                    $parameters = array_map(
+                        function (ReflectionParameter $parameter) use ($data): mixed {
+                            try {
+                                return $this->hydrateCompositeParameter($parameter, $data);
+                            } catch (Throwable $e) {
+                                throw new ParameterFailure($parameter->getName(), $e);
+                            }
+                        },
+                        $constructor->getParameters(),
+                    );
+                } else {
+                    $parameters = [];
+                }
+            }
+
+            $compositeValueObject->__construct(...$parameters);
+        };
+
+        $reflector = new ReflectionClass($className);
+        return $reflector->newLazyGhost($initializer);
     }
 
     /**
