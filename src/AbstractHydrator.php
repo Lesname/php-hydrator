@@ -22,7 +22,7 @@ use LesValueObject\Number\NumberValueObject;
 use LesValueObject\String\StringValueObject;
 use LesValueObject\Composite\CompositeValueObject;
 use LesValueObject\Collection\CollectionValueObject;
-use LesValueObject\Composite\DynamicCompositeValueObject;
+use LesValueObject\Composite\WrappedCompositeValueObject;
 
 abstract class AbstractHydrator implements Hydrator
 {
@@ -93,7 +93,7 @@ abstract class AbstractHydrator implements Hydrator
         return (new ReflectionClass($className))
             ->newLazyProxy(
                 function () use ($className, $data) {
-                    if ($className === DynamicCompositeValueObject::class) {
+                    if (is_subclass_of($className, WrappedCompositeValueObject::class)) {
                         $parameters = [$data];
                     } else {
                         $reflection = new ReflectionClass($className);
