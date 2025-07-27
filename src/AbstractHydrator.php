@@ -17,6 +17,7 @@ use LesHydrator\Attribute\TypeMatch;
 use LesHydrator\Exception\MissingValue;
 use LesValueObject\Enum\EnumValueObject;
 use LesHydrator\Exception\InvalidDataType;
+use LesHydrator\Exception\FailedComposite;
 use LesHydrator\Exception\ParameterFailure;
 use LesValueObject\Number\NumberValueObject;
 use LesValueObject\String\StringValueObject;
@@ -29,9 +30,10 @@ abstract class AbstractHydrator implements Hydrator
     /**
      * @param class-string<T> $className
      *
-     * @return T
-     *
      * @template T of ValueObject
+     *
+     * @throws ReflectionException
+     * @throws InvalidDataType
      */
     public function hydrate(string $className, mixed $data): ValueObject
     {
@@ -93,29 +95,33 @@ abstract class AbstractHydrator implements Hydrator
         return (new ReflectionClass($className))
             ->newLazyProxy(
                 function () use ($className, $data) {
-                    if (is_subclass_of($className, WrappedCompositeValueObject::class)) {
-                        $parameters = [$data];
-                    } else {
-                        $reflection = new ReflectionClass($className);
-                        $constructor = $reflection->getConstructor();
-
-                        if ($constructor instanceof ReflectionMethod) {
-                            $parameters = array_map(
-                                function (ReflectionParameter $parameter) use ($data): mixed {
-                                    try {
-                                        return $this->hydrateCompositeParameter($parameter, $data);
-                                    } catch (Throwable $e) {
-                                        throw new ParameterFailure($parameter->getName(), $e);
-                                    }
-                                },
-                                $constructor->getParameters(),
-                            );
+                    try {
+                        if (is_subclass_of($className, WrappedCompositeValueObject::class)) {
+                            $parameters = [$data];
                         } else {
-                            $parameters = [];
-                        }
-                    }
+                            $reflection = new ReflectionClass($className);
+                            $constructor = $reflection->getConstructor();
 
-                    return new $className(...$parameters);
+                            if ($constructor instanceof ReflectionMethod) {
+                                $parameters = array_map(
+                                    function (ReflectionParameter $parameter) use ($data): mixed {
+                                        try {
+                                            return $this->hydrateCompositeParameter($parameter, $data);
+                                        } catch (Throwable $e) {
+                                            throw new ParameterFailure($parameter->getName(), $e);
+                                        }
+                                    },
+                                    $constructor->getParameters(),
+                                );
+                            } else {
+                                $parameters = [];
+                            }
+                        }
+
+                        return new $className(...$parameters);
+                    } catch (Throwable $e) {
+                        throw new FailedComposite($className, $e);
+                    }
                 }
             );
     }
