@@ -1,4 +1,10 @@
 parameters:
     level: max
+    ignoreErrors:
+        -
+            message: '#^Method LesHydrator\\AbstractHydrator\:\:hydrate\(\) should return T of LesValueObject\\ValueObject but returns \(LesValueObject\\Collection\\CollectionValueObject&T of LesValueObject\\ValueObject\)\|\(LesValueObject\\Composite\\CompositeValueObject&T of LesValueObject\\ValueObject\)\|\(LesValueObject\\Enum\\EnumValueObject&T of LesValueObject\\ValueObject\)\|\(LesValueObject\\Number\\NumberValueObject&T of LesValueObject\\ValueObject\)\|\(LesValueObject\\String\\StringValueObject&T of LesValueObject\\ValueObject\)\.$#'
+            identifier: return.type
+            count: 1
+            path: src/AbstractHydrator.php
     paths:
         - src

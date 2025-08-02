@@ -11,7 +11,7 @@ use LesHydratorTest\Stub\FooStub;
 use LesHydratorTest\Stub\BarStub;
 use LesHydrator\ReflectionHydrator;
 use LesValueObject\Number\Int\Positive;
-use LesHydrator\Exception\ParameterFailure;
+use LesHydrator\Exception\FailedComposite;
 use LesValueObject\Number\Int\Paginate\Page;
 use LesValueObject\String\Format\SearchTerm;
 use LesHydratorTest\Stub\IntValueObjectStub;
@@ -229,7 +229,7 @@ final class ReflectionHydratorTest extends TestCase
 
     public function testCompositeUnionNoTypeMatch(): void
     {
-        $this->expectException(ParameterFailure::class);
+        $this->expectException(FailedComposite::class);
 
         $composite = new class (null) extends AbstractCompositeValueObject {
             public function __construct(public readonly EnumValueObjectStub | IntValueObjectStub | null $value)
@@ -250,9 +250,9 @@ final class ReflectionHydratorTest extends TestCase
         $hydrator->hydrate(stdClass::class, []);
     }
 
-    public function testMissing(): void
+    public function testMissingParameter(): void
     {
-        $this->expectException(ParameterFailure::class);
+        $this->expectException(FailedComposite::class);
 
         $paginate = new class (1) extends AbstractCompositeValueObject {
             public function __construct(public int $foo)
