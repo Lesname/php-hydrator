@@ -24,6 +24,7 @@ use LesValueObject\String\StringValueObject;
 use LesValueObject\Composite\CompositeValueObject;
 use LesValueObject\Collection\CollectionValueObject;
 use LesValueObject\Composite\WrappedCompositeValueObject;
+use LesValueObject\Composite\Signature\SignatureCompositeValueObject;
 
 abstract class AbstractHydrator implements Hydrator
 {
@@ -96,7 +97,15 @@ abstract class AbstractHydrator implements Hydrator
             ->newLazyProxy(
                 function () use ($className, $data) {
                     try {
-                        if (is_subclass_of($className, WrappedCompositeValueObject::class)) {
+                        if (is_subclass_of($className, SignatureCompositeValueObject::class)) {
+                            $signature = $className::getSignature();
+                            $parameters = [
+                                array_map(
+                                    fn (mixed $itemValue) => $this->hydrate($signature, $itemValue),
+                                    $data,
+                                ),
+                            ];
+                        } elseif (is_subclass_of($className, WrappedCompositeValueObject::class)) {
                             $parameters = [$data];
                         } else {
                             $reflection = new ReflectionClass($className);
