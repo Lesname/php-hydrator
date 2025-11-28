@@ -1,7 +1,10 @@
 <?php
+
 declare(strict_types=1);
 
 namespace LesHydrator\Matcher;
+
+use Override;
 
 /**
  * @psalm-immutable
@@ -13,6 +16,7 @@ final class FieldMatcher implements Matcher
         public readonly string $value,
     ) {}
 
+    #[Override]
     public function matches(mixed $value, mixed $parentValue): bool
     {
         return is_array($value)

@@ -1,8 +1,10 @@
 <?php
+
 declare(strict_types=1);
 
 namespace LesHydrator;
 
+use Override;
 use Throwable;
 use ReflectionClass;
 use RuntimeException;
@@ -36,6 +38,7 @@ abstract class AbstractHydrator implements Hydrator
      * @throws ReflectionException
      * @throws InvalidDataType
      */
+    #[Override]
     public function hydrate(string $className, mixed $data): ValueObject
     {
         return match (true) {

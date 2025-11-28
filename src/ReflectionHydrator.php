@@ -1,8 +1,10 @@
 <?php
+
 declare(strict_types=1);
 
 namespace LesHydrator;
 
+use Override;
 use LesHydrator\Exception\NoMatch;
 use LesValueObject\String\StringValueObject;
 use LesValueObject\Enum\EnumValueObject;
@@ -22,6 +24,7 @@ final class ReflectionHydrator extends AbstractHydrator
      * @throws NoMatch
      * @throws ReflectionException
      */
+    #[Override]
     protected function hydrateCollectionItem(array | string $itemType, mixed $itemValue, mixed $data): ValueObject
     {
         if (is_array($itemType)) {
@@ -38,6 +41,7 @@ final class ReflectionHydrator extends AbstractHydrator
      *
      * @template T of NumberValueObject
      */
+    #[Override]
     protected function hydrateNumber(string $className, mixed $data): NumberValueObject
     {
         $multipleOf = $className::getMultipleOf();
@@ -66,6 +70,7 @@ final class ReflectionHydrator extends AbstractHydrator
      *
      * @template T of StringValueObject
      */
+    #[Override]
     protected function hydrateString(string $className, mixed $data): StringValueObject
     {
         if (is_int($data) || is_float($data)) {
@@ -84,6 +89,7 @@ final class ReflectionHydrator extends AbstractHydrator
      *
      * @template T of EnumValueObject
      */
+    #[Override]
     protected function hydrateEnum(string $className, mixed $data): EnumValueObject
     {
         assert(is_string($data));

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace LesHydratorTest;
@@ -69,14 +70,14 @@ class FakerHydratorTest extends TestCase
     public function testFloat(): void
     {
         $vo = new class (3.3) extends AbstractFloatValueObject {
-            public static function getMinimumValue(): int|float
+            public static function getMinimumValue(): float
             {
-                return 2;
+                return 2.0;
             }
 
-            public static function getMaximumValue(): int|float
+            public static function getMaximumValue(): float
             {
-                return 7;
+                return 7.0;
             }
 
             public static function getMultipleOf(): int|float
