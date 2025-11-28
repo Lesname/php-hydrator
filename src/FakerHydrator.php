@@ -1,8 +1,10 @@
 <?php
+
 declare(strict_types=1);
 
 namespace LesHydrator;
 
+use Override;
 use ReflectionClass;
 use RuntimeException;
 use Random\Randomizer;
@@ -42,6 +44,7 @@ final class FakerHydrator extends AbstractHydrator
      *
      * @template T of CollectionValueObject<ValueObject>
      */
+    #[Override]
     protected function hydrateCollection(string $className, mixed $data): CollectionValueObject
     {
         if (!is_array($data) && $data === null) {
@@ -62,6 +65,7 @@ final class FakerHydrator extends AbstractHydrator
      * @throws NoMatch
      * @throws ReflectionException
      */
+    #[Override]
     protected function hydrateCollectionItem(array | string $itemType, mixed $itemValue, mixed $data): ValueObject
     {
         if (is_array($itemType)) {
@@ -88,6 +92,7 @@ final class FakerHydrator extends AbstractHydrator
      *
      * @throws InvalidDataType
      */
+    #[Override]
     protected function hydrateComposite(string $className, mixed $data): CompositeValueObject
     {
         return parent::hydrateComposite($className, $data ?? []);
@@ -196,6 +201,7 @@ final class FakerHydrator extends AbstractHydrator
      *
      * @todo with php 8.3 random float is supported
      */
+    #[Override]
     protected function hydrateNumber(string $className, mixed $data): NumberValueObject
     {
         if (!is_int($data) && !is_float($data)) {
@@ -236,6 +242,7 @@ final class FakerHydrator extends AbstractHydrator
      * @throws InvalidDataType
      * @throws ReflectionException
      */
+    #[Override]
     protected function hydrateString(string $className, mixed $data): StringValueObject
     {
         if (!is_string($data)) {
