@@ -27,6 +27,7 @@ use LesValueObject\Composite\CompositeValueObject;
 use LesValueObject\Collection\CollectionValueObject;
 use LesValueObject\Composite\WrappedCompositeValueObject;
 use LesValueObject\Composite\Signature\SignatureCompositeValueObject;
+use LesValueObject\Composite\AbstractDiscriminatorCompositeValueObject;
 
 abstract class AbstractHydrator implements Hydrator
 {
@@ -96,6 +97,7 @@ abstract class AbstractHydrator implements Hydrator
             throw new InvalidDataType();
         }
 
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
         return (new ReflectionClass($className))
             ->newLazyProxy(
                 function () use ($className, $data) {
@@ -115,16 +117,50 @@ abstract class AbstractHydrator implements Hydrator
                             $constructor = $reflection->getConstructor();
 
                             if ($constructor instanceof ReflectionMethod) {
-                                $parameters = array_map(
-                                    function (ReflectionParameter $parameter) use ($data): mixed {
+                                $parameters = [];
+
+                                if (is_subclass_of($className, AbstractDiscriminatorCompositeValueObject::class)) {
+                                    $discriminatorProperty = $className::getDiscriminatingProperty();
+
+                                    foreach ($constructor->getParameters() as $parameter) {
                                         try {
-                                            return $this->hydrateCompositeParameter($parameter, $data);
+                                            if ($parameter->getName() === $discriminatorProperty) {
+                                                $discriminatorField = $className::getDiscriminatingField();
+                                                $discriminatorMap = $className::getDiscriminatingMapping();
+
+                                                if (!isset($data[$discriminatorField])) {
+                                                    throw new RuntimeException("Missing discriminator field: {$discriminatorField}");
+                                                }
+
+                                                if (!is_string($data[$discriminatorField])) {
+                                                    $fieldType = get_debug_type($data[$discriminatorField]);
+
+                                                    throw new RuntimeException("Discriminator field must be a string, got: {$fieldType}");
+                                                }
+
+                                                if (!isset($discriminatorMap[$data[$discriminatorField]])) {
+                                                    throw new RuntimeException("Unknown discriminator value: {$data[$discriminatorField]}");
+                                                }
+
+                                                $result = $discriminatorMap[$data[$discriminatorField]];
+
+                                                $parameters[] = $this->hydrate($result, $data[$discriminatorProperty]);
+                                            } else {
+                                                $parameters[] = $this->hydrateCompositeParameter($parameter, $data);
+                                            }
                                         } catch (Throwable $e) {
                                             throw new ParameterFailure($parameter->getName(), $e);
                                         }
-                                    },
-                                    $constructor->getParameters(),
-                                );
+                                    }
+                                } else {
+                                    foreach ($constructor->getParameters() as $parameter) {
+                                        try {
+                                            $parameters[] = $this->hydrateCompositeParameter($parameter, $data);
+                                        } catch (Throwable $e) {
+                                            throw new ParameterFailure($parameter->getName(), $e);
+                                        }
+                                    }
+                                }
                             } else {
                                 $parameters = [];
                             }

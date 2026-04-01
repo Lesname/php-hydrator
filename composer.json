@@ -4,7 +4,7 @@
   "require": {
     "php": "^8.4.0",
 
-    "lesname/value-object": "^0.6.0"
+    "lesname/value-object": "^0.6.3"
   },
   "require-dev": {
     "squizlabs/php_codesniffer": "^4.0.0",
