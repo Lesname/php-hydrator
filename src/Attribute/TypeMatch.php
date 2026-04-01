@@ -7,6 +7,9 @@ namespace LesHydrator\Attribute;
 use Attribute;
 use LesHydrator\Matcher\Matcher;
 
+/**
+ * @deprecated moved to Discriminator Composite
+ */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 final class TypeMatch
 {

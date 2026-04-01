@@ -70,6 +70,7 @@ final class FakerHydrator extends AbstractHydrator
     {
         if (is_array($itemType)) {
             if ($itemValue !== null) {
+                // @phpstan-ignore-next-line
                 $itemType = $this->matchType($itemType, $itemValue, $data);
             } elseif (count($itemType) > 0) {
                 $itemType = $this->pickArrayItem($itemType);

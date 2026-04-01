@@ -8,6 +8,8 @@ use Override;
 
 /**
  * @psalm-immutable
+ *
+ * @deprecated moved to Discriminator Composite
  */
 final class FieldMatcher implements Matcher
 {
