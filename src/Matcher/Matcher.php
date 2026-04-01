@@ -6,6 +6,8 @@ namespace LesHydrator\Matcher;
 
 /**
  * @psalm-immutable
+ *
+ * @deprecated moved to Discriminator Composite
  */
 interface Matcher
 {
