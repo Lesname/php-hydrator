@@ -217,6 +217,7 @@ abstract class AbstractHydrator implements Hydrator
 
             $typeName = $type->getName();
         } elseif ($type instanceof ReflectionUnionType) {
+            // @phpstan-ignore-next-line
             $typeName = $this->matchType(
                 (function () use ($type) {
                     foreach ($type->getTypes() as $subType) {
@@ -291,6 +292,8 @@ abstract class AbstractHydrator implements Hydrator
      *
      * @throws NoMatch
      * @throws ReflectionException
+     *
+     * @deprecated will be dropped when TypeMatch is dropped
      */
     protected function matchType(iterable $union, mixed $value, mixed $parentValue): string
     {

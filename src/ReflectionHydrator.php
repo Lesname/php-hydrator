@@ -28,6 +28,7 @@ final class ReflectionHydrator extends AbstractHydrator
     protected function hydrateCollectionItem(array | string $itemType, mixed $itemValue, mixed $data): ValueObject
     {
         if (is_array($itemType)) {
+            // @phpstan-ignore-next-line
             $itemType = $this->matchType($itemType, $itemValue, $data);
         }
 
