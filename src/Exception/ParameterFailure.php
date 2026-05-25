@@ -13,6 +13,6 @@ final class ParameterFailure extends AbstractException
 {
     public function __construct(string $name, Throwable $failure)
     {
-        parent::__construct("Parameter {$name} failed: {$failure->getMessage()}", previous: $failure);
+        parent::__construct("Parameter '{$name}' failed: {$failure->getMessage()}", previous: $failure);
     }
 }
