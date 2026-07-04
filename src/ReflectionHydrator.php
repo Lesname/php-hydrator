@@ -45,20 +45,10 @@ final class ReflectionHydrator extends AbstractHydrator
     #[Override]
     protected function hydrateNumber(string $className, mixed $data): NumberValueObject
     {
-        $multipleOf = $className::getMultipleOf();
-
-        if (is_float($multipleOf)) {
-            if (is_string($data) && preg_match('/^-?(\d+|\d*\.\d+)$/', $data)) {
-                $data = (float)$data;
-            }
-
-            assert(is_float($data));
-        } else {
-            if (is_string($data) && preg_match('/^-?\d+$/', $data)) {
-                $data = (int)$data;
-            }
-
-            assert(is_int($data));
+        if (is_string($data) && preg_match('/^-?((?<float>\d*\.\d+)|(?<int>\d+))$/', $data, $matches)) {
+            $data = isset($matches['int'])
+                ? (int)$data
+                : (float)$data;
         }
 
         return new $className($data);
