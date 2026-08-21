@@ -12,9 +12,7 @@ use ReflectionException;
 use ReflectionParameter;
 use ReflectionNamedType;
 use ReflectionUnionType;
-use Random\RandomException;
 use LesValueObject\ValueObject;
-use LesHydrator\Exception\NoMatch;
 use LesValueObject\Enum\EnumValueObject;
 use LesValueObject\Attribute\DocExample;
 use LesHydrator\Exception\InvalidDataType;
@@ -24,11 +22,17 @@ use LesValueObject\Composite\CompositeValueObject;
 use LesValueObject\Collection\CollectionValueObject;
 use LesValueObject\String\Format\StringFormatValueObject;
 
+/**
+ * @psalm-mutable
+ */
 final class FakerHydrator extends AbstractHydrator
 {
     private readonly Randomizer $randomizer;
     private readonly Hydrator $hydrator;
 
+    /**
+     * @psalm-impure
+     */
     public function __construct(
         ?Randomizer $randomizer = null,
         ?Hydrator $hydrator = null,
@@ -43,6 +47,8 @@ final class FakerHydrator extends AbstractHydrator
      * @return T
      *
      * @template T of CollectionValueObject<ValueObject>
+     *
+     * @psalm-impure
      */
     #[Override]
     protected function hydrateCollection(string $className, mixed $data): CollectionValueObject
@@ -56,35 +62,6 @@ final class FakerHydrator extends AbstractHydrator
     }
 
     /**
-     * @param class-string<T>|array<class-string<T>> $itemType
-     *
-     * @return T
-     *
-     * @template T of ValueObject
-     *
-     * @throws NoMatch
-     * @throws ReflectionException
-     */
-    #[Override]
-    protected function hydrateCollectionItem(array | string $itemType, mixed $itemValue, mixed $data): ValueObject
-    {
-        if (is_array($itemType)) {
-            if ($itemValue !== null) {
-                // @phpstan-ignore-next-line
-                $itemType = $this->matchType($itemType, $itemValue, $data);
-            } elseif (count($itemType) > 0) {
-                $itemType = $this->pickArrayItem($itemType);
-            } else {
-                throw new RuntimeException();
-            }
-
-            assert(class_exists($itemType));
-        }
-
-        return $this->hydrate($itemType, $itemValue);
-    }
-
-    /**
      * @param class-string<T> $className
      *
      * @return T
@@ -92,6 +69,8 @@ final class FakerHydrator extends AbstractHydrator
      * @template T of CompositeValueObject
      *
      * @throws InvalidDataType
+     *
+     * @psalm-impure
      */
     #[Override]
     protected function hydrateComposite(string $className, mixed $data): CompositeValueObject
@@ -104,9 +83,11 @@ final class FakerHydrator extends AbstractHydrator
      *
      * @throws Exception\MissingValue
      * @throws InvalidDataType
-     * @throws NoMatch
      * @throws ReflectionException
+     *
+     * @psalm-impure
      */
+    #[Override]
     protected function hydrateCompositeParameter(ReflectionParameter $parameter, array $data): mixed
     {
         if (!isset($data[$parameter->getName()])) {
@@ -125,17 +106,6 @@ final class FakerHydrator extends AbstractHydrator
                 );
 
             if ($generate) {
-                if (!$parameterType instanceof ReflectionNamedType) {
-                    if ($parameterType instanceof ReflectionUnionType) {
-                        $unionTypes = $parameterType->getTypes();
-                        assert(count($unionTypes) > 0);
-
-                        $parameterType = $this->pickArrayItem($unionTypes);
-                    } else {
-                        throw new RuntimeException();
-                    }
-                }
-
                 if (!$parameterType instanceof ReflectionNamedType) {
                     throw new RuntimeException();
                 }
@@ -173,7 +143,10 @@ final class FakerHydrator extends AbstractHydrator
      * @template T of EnumValueObject
      *
      * @throws InvalidDataType
+     *
+     * @psalm-impure
      */
+    #[Override]
     protected function hydrateEnum(string $className, mixed $data): EnumValueObject
     {
         if (!is_string($data)) {
@@ -197,10 +170,10 @@ final class FakerHydrator extends AbstractHydrator
      *
      * @template T of NumberValueObject
      *
-     * @throws RandomException
+     * @throws ReflectionException
      * @throws InvalidDataType
      *
-     * @todo with php 8.3 random float is supported
+     * @psalm-impure
      */
     #[Override]
     protected function hydrateNumber(string $className, mixed $data): NumberValueObject
@@ -242,6 +215,8 @@ final class FakerHydrator extends AbstractHydrator
      *
      * @throws InvalidDataType
      * @throws ReflectionException
+     *
+     * @psalm-impure
      */
     #[Override]
     protected function hydrateString(string $className, mixed $data): StringValueObject
@@ -287,6 +262,8 @@ final class FakerHydrator extends AbstractHydrator
      * @return T
      *
      * @template T
+     *
+     * @psalm-impure
      */
     private function pickArrayItem(array $array)
     {

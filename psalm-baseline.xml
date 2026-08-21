@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="7.0.0-beta19@7e751c06a756fa64dc4c759c09fe4a173afcb433">
+  <file src="src/AbstractHydrator.php">
+    <InvalidReturnStatement>
+      <code><![CDATA[match (true) {
+            is_subclass_of($className, CollectionValueObject::class) => $this->hydrateCollection($className, $data),
+            is_subclass_of($className, CompositeValueObject::class) => $this->hydrateComposite($className, $data),
+            is_subclass_of($className, EnumValueObject::class) => $this->hydrateEnum($className, $data),
+            is_subclass_of($className, NumberValueObject::class) => $this->hydrateNumber($className, $data),
+            is_subclass_of($className, StringValueObject::class) => $this->hydrateString($className, $data),
+            default => throw new RuntimeException("{$className} unknown vo sub class"),
+        }]]></code>
+    </InvalidReturnStatement>
+    <InvalidReturnType>
+      <code><![CDATA[T]]></code>
+    </InvalidReturnType>
+    <MixedAssignment>
+      <code><![CDATA[$data[$parameter->getName()]]]></code>
+      <code><![CDATA[$parameters[]]]></code>
+      <code><![CDATA[$parameters[]]]></code>
+      <code><![CDATA[$value]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/FakerHydrator.php">
+    <InvalidOperand>
+      <code><![CDATA[$className::getMaximumValue() - $className::getMinimumValue()]]></code>
+      <code><![CDATA[$className::getMaximumValue() / $className::getMultipleOf()]]></code>
+      <code><![CDATA[$className::getMinimumValue() / $className::getMultipleOf()]]></code>
+      <code><![CDATA[$selected * $className::getMultipleOf()]]></code>
+      <code><![CDATA[($className::getMaximumValue() - $className::getMinimumValue()) / $className::getMultipleOf()]]></code>
+      <code><![CDATA[($minSteps + $randomSteps) * $className::getMultipleOf()]]></code>
+      <code><![CDATA[(int)$className::getMinimumValue() +  ($selected * $className::getMultipleOf())]]></code>
+    </InvalidOperand>
+  </file>
+</files>

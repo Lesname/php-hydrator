@@ -12,10 +12,7 @@ use ReflectionMethod;
 use ReflectionException;
 use ReflectionParameter;
 use ReflectionNamedType;
-use ReflectionUnionType;
 use LesValueObject\ValueObject;
-use LesHydrator\Exception\NoMatch;
-use LesHydrator\Attribute\TypeMatch;
 use LesHydrator\Exception\MissingValue;
 use LesValueObject\Enum\EnumValueObject;
 use LesHydrator\Exception\InvalidDataType;
@@ -34,10 +31,14 @@ abstract class AbstractHydrator implements Hydrator
     /**
      * @param class-string<T> $className
      *
+     * @return T
+     *
      * @template T of ValueObject
      *
      * @throws ReflectionException
      * @throws InvalidDataType
+     *
+     * @psalm-impure
      */
     #[Override]
     public function hydrate(string $className, mixed $data): ValueObject
@@ -58,28 +59,22 @@ abstract class AbstractHydrator implements Hydrator
      * @return T
      *
      * @template T of CollectionValueObject
+     *
+     * @psalm-impure
      */
     protected function hydrateCollection(string $className, mixed $data): CollectionValueObject
     {
-        $itemType = $className::getItemType();
-        assert(is_array($data));
+        if (!is_array($data)) {
+            throw new InvalidDataType();
+        }
 
         return new $className(
             array_map(
-                fn (mixed $itemValue) => $this->hydrateCollectionItem($itemType, $itemValue, $data),
+                fn (mixed $itemValue) => $this->hydrate($className::getItemType(), $itemValue),
                 $data,
             ),
         );
     }
-
-    /**
-     * @param class-string<T>|array<class-string<T>> $itemType
-     *
-     * @return T
-     *
-     * @template T of ValueObject
-     */
-    abstract protected function hydrateCollectionItem(array | string $itemType, mixed $itemValue, mixed $data): ValueObject;
 
     /**
      * @param class-string<T> $className
@@ -90,6 +85,8 @@ abstract class AbstractHydrator implements Hydrator
      *
      * @throws InvalidDataType
      * @throws ReflectionException
+     *
+     * @psalm-impure
      */
     protected function hydrateComposite(string $className, mixed $data): CompositeValueObject
     {
@@ -180,7 +177,8 @@ abstract class AbstractHydrator implements Hydrator
      * @throws ReflectionException
      * @throws InvalidDataType
      * @throws MissingValue
-     * @throws NoMatch
+     *
+     * @psalm-impure
      */
     protected function hydrateCompositeParameter(ReflectionParameter $parameter, array $data): mixed
     {
@@ -216,27 +214,6 @@ abstract class AbstractHydrator implements Hydrator
             }
 
             $typeName = $type->getName();
-        } elseif ($type instanceof ReflectionUnionType) {
-            // @phpstan-ignore-next-line
-            $typeName = $this->matchType(
-                (function () use ($type) {
-                    foreach ($type->getTypes() as $subType) {
-                        assert($subType instanceof ReflectionNamedType);
-
-                        $subTypeName = $subType->getName();
-
-                        if (class_exists($subTypeName)) {
-                            if (!is_subclass_of($subTypeName, ValueObject::class)) {
-                                throw new RuntimeException("'{$subTypeName}' is not an value object");
-                            }
-
-                            yield $subTypeName;
-                        }
-                    }
-                })(),
-                $value,
-                $data,
-            );
         } else {
             throw new RuntimeException("Unhandled reflection type");
         }
@@ -262,6 +239,8 @@ abstract class AbstractHydrator implements Hydrator
      * @return T
      *
      * @template T of EnumValueObject
+     *
+     * @psalm-impure
      */
     abstract protected function hydrateEnum(string $className, mixed $data): EnumValueObject;
 
@@ -271,6 +250,8 @@ abstract class AbstractHydrator implements Hydrator
      * @return T
      *
      * @template T of NumberValueObject
+     *
+     * @psalm-impure
      */
     abstract protected function hydrateNumber(string $className, mixed $data): NumberValueObject;
 
@@ -280,40 +261,14 @@ abstract class AbstractHydrator implements Hydrator
      * @return T
      *
      * @template T of StringValueObject
+     *
+     * @psalm-impure
      */
     abstract protected function hydrateString(string $className, mixed $data): StringValueObject;
 
     /**
-     * @param iterable<class-string<T>> $union
-     *
-     * @return class-string<T>
-     *
-     * @template T of ValueObject
-     *
-     * @throws NoMatch
-     * @throws ReflectionException
-     *
-     * @deprecated will be dropped when TypeMatch is dropped
+     * @psalm-pure
      */
-    protected function matchType(iterable $union, mixed $value, mixed $parentValue): string
-    {
-        foreach ($union as $item) {
-            $refClass = new ReflectionClass($item);
-
-            if ($value instanceof $item) {
-                return $item;
-            }
-
-            foreach ($refClass->getAttributes(TypeMatch::class) as $attribute) {
-                if ($attribute->newInstance()->matcher->matches($value, $parentValue)) {
-                    return $item;
-                }
-            }
-        }
-
-        throw new NoMatch();
-    }
-
     protected function toBoolean(mixed $value): bool
     {
         if (in_array($value, [0, 1], true)) {
@@ -330,7 +285,9 @@ abstract class AbstractHydrator implements Hydrator
             }
         }
 
-        assert(is_bool($value));
+        if (!is_bool($value)) {
+            throw new InvalidDataType();
+        }
 
         return $value;
     }
