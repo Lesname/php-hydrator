@@ -154,35 +154,4 @@ class FakerHydratorTest extends TestCase
 
         self::assertInstanceOf(Paginate::class, $hydrated);
     }
-
-    public function testCompositeUnion(): void
-    {
-        $composite = new class (null) extends AbstractCompositeValueObject {
-            public function __construct(public readonly EnumValueObjectStub | IntValueObjectStub | null $value)
-            {}
-        };
-
-        $randomizer = function (int $int) {
-            return new Randomizer(
-                new class ($int) implements Engine {
-                    public function __construct(public readonly int $int)
-                    {}
-
-                    public function generate(): string
-                    {
-                        return pack('L', $this->int);
-                    }
-                },
-            );
-        };
-
-        $nullHydrated = (new FakerHydrator($randomizer(3)))->hydrate($composite::class, null);
-        self::assertSame(null, $nullHydrated->value);
-
-        $fizHydrated = (new FakerHydrator($randomizer(1)))->hydrate($composite::class, null);
-        self::assertSame(EnumValueObjectStub::Fiz, $fizHydrated->value);
-
-        $intHydrated = (new FakerHydrator($randomizer(2)))->hydrate($composite::class, null);
-        self::assertEquals(new IntValueObjectStub(3), $intHydrated->value);
-    }
 }

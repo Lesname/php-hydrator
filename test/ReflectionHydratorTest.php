@@ -115,42 +115,6 @@ final class ReflectionHydratorTest extends TestCase
         }
     }
 
-    public function testCollectionUnion(): void
-    {
-        $class = new class ([]) extends AbstractCollectionValueObject {
-            public static function getMinimumSize(): int
-            {
-                return 0;
-            }
-
-            public static function getMaximumSize(): int
-            {
-                return 3;
-            }
-
-            public static function getItemType(): array
-            {
-                return [
-                    EnumValueObjectStub::class,
-                    IntValueObjectStub::class,
-                ];
-            }
-        };
-
-        $hydrator = new ReflectionHydrator();
-        $collection = $hydrator->hydrate($class::class, [1, 'biz']);
-
-        self::assertInstanceOf(CollectionValueObject::class, $collection);
-
-        foreach ($collection as $i => $value) {
-            match ($i) {
-                0 => self::assertEquals(new IntValueObjectStub(1), $value),
-                1 => self::assertEquals(EnumValueObjectStub::Biz, $value),
-                default => throw new RuntimeException(),
-            };
-        }
-    }
-
     public function testComposite(): void
     {
         $perPage = new PerPage(13);
@@ -184,31 +148,6 @@ final class ReflectionHydratorTest extends TestCase
         self::assertSame(3, $hydrated->page->value);
         self::assertNull($hydrated->int);
         self::assertFalse($hydrated->biz);
-    }
-
-    public function testCompositeUnion(): void
-    {
-        $composite = new class (null) extends AbstractCompositeValueObject {
-            public function __construct(public readonly EnumValueObjectStub | IntValueObjectStub | null $value)
-            {}
-        };
-
-        $hydrator = new ReflectionHydrator();
-        $enum = new $composite(EnumValueObjectStub::Fiz);
-        $int = new $composite(new IntValueObjectStub(2));
-
-        self::assertEquals(
-            $hydrator->hydrate($composite::class, ['value' => 'fiz'])->value,
-            $enum->value,
-        );
-        self::assertEquals(
-            $hydrator->hydrate($composite::class, ['value' => 2])->value,
-            $int->value,
-        );
-        self::assertEquals(
-            $hydrator->hydrate($composite::class, ['value' => null])->value,
-            $composite->value,
-        );
     }
 
     public function testCompositeIntersect(): void

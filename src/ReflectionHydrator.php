@@ -5,42 +5,23 @@ declare(strict_types=1);
 namespace LesHydrator;
 
 use Override;
-use LesHydrator\Exception\NoMatch;
+use RuntimeException;
 use LesValueObject\String\StringValueObject;
 use LesValueObject\Enum\EnumValueObject;
 use LesValueObject\Number\NumberValueObject;
-use LesValueObject\ValueObject;
-use ReflectionException;
 
 final class ReflectionHydrator extends AbstractHydrator
 {
-    /**
-     * @param class-string<T>|array<class-string<T>> $itemType
-     *
-     * @return T
-     *
-     * @template T of ValueObject
-     *
-     * @throws NoMatch
-     * @throws ReflectionException
-     */
-    #[Override]
-    protected function hydrateCollectionItem(array | string $itemType, mixed $itemValue, mixed $data): ValueObject
-    {
-        if (is_array($itemType)) {
-            // @phpstan-ignore-next-line
-            $itemType = $this->matchType($itemType, $itemValue, $data);
-        }
-
-        return $this->hydrate($itemType, $itemValue);
-    }
-
     /**
      * @param class-string<T> $className
      *
      * @return T
      *
      * @template T of NumberValueObject
+     *
+     * @psalm-suppress MissingPureAnnotation
+     *
+     * @psalm-mutation-free
      */
     #[Override]
     protected function hydrateNumber(string $className, mixed $data): NumberValueObject
@@ -60,6 +41,10 @@ final class ReflectionHydrator extends AbstractHydrator
      * @return T
      *
      * @template T of StringValueObject
+     *
+     * @psalm-suppress MissingPureAnnotation
+     *
+     * @psalm-mutation-free
      */
     #[Override]
     protected function hydrateString(string $className, mixed $data): StringValueObject
@@ -68,7 +53,9 @@ final class ReflectionHydrator extends AbstractHydrator
             $data = (string)$data;
         }
 
-        assert(is_string($data));
+        if (!is_string($data)) {
+            throw new RuntimeException();
+        }
 
         return new $className($data);
     }
@@ -79,6 +66,8 @@ final class ReflectionHydrator extends AbstractHydrator
      * @return T
      *
      * @template T of EnumValueObject
+     *
+     * @psalm-mutation-free
      */
     #[Override]
     protected function hydrateEnum(string $className, mixed $data): EnumValueObject

@@ -6,6 +6,9 @@ namespace LesHydrator;
 
 use LesValueObject\ValueObject;
 
+/**
+ * @psalm-mutable
+ */
 interface Hydrator
 {
     /**
@@ -14,6 +17,8 @@ interface Hydrator
      * @template T of \LesValueObject\ValueObject
      *
      * @return T
+     *
+     * @psalm-impure
      */
     public function hydrate(string $className, mixed $data): ValueObject;
 }
